@@ -4,7 +4,6 @@ on: [push, pull_request, workflow_dispatch]
 
 env:
   HADDOCK_DIR: haddock-html
-  PAGES_DIR: gh-pages
 
 jobs:
 
@@ -42,32 +41,22 @@ jobs:
       run: mv $(find haddock_build -wholename '*doc/html/libro-backend' | head -n 1) $HADDOCK_DIR
 
     - name: Store generated API docs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-pages-artifact@v2
       with:
         path: ${{ env.HADDOCK_DIR }}
-        name: haddock-html
 
-  deploy-pages:
+  deploy:
     needs: haddock
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-20.04
     permissions:
-      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
 
-      - name: Load API docs
-        uses: actions/download-artifact@v3
-        with:
-          name: haddock-html
-          path: ${{ env.PAGES_DIR }}
-
-      - name: Disable GitHub Pages' Jekyll
-        run: touch $PAGES_DIR/.nojekyll
-
       - name: Deploy to GitHub Pages
-        uses: crazy-max/ghaction-github-pages@v3
-        with:
-          target_branch: gh-pages
-          build_dir: ${{ env.PAGES_DIR }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: deployment
+        uses: actions/deploy-pages@v2
