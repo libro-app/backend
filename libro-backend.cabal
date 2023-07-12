@@ -1,0 +1,36 @@
+cabal-version:        3.0
+name:                 libro-backend
+version:              0.1.0.0
+homepage:             https://github.com/libro-app
+license:              MIT
+license-file:         LICENSE
+author:               Mirko Westermeier
+maintainer:           mirko@westermeier.de
+
+common warnings
+  ghc-options:        -Wall
+
+library
+  default-language:   Haskell2010
+  exposed-modules:    LiBro
+  build-depends:      base >=4.14.0.0
+  hs-source-dirs:     lib
+
+executable libro-backend
+  default-language:   Haskell2010
+  main-is:            Main.hs
+  build-depends:      base >=4.14.0.0
+                    , libro-backend
+  hs-source-dirs:     app
+
+test-suite libro-backend-test
+  default-language:   Haskell2010
+  type:               exitcode-stdio-1.0
+  hs-source-dirs:     test
+  other-modules:      LiBroSpec
+  main-is:            run-all-tests.hs
+  build-depends:      base >=4.14.0.0
+                    , hspec
+                    , QuickCheck
+                    , libro-backend
+  build-tool-depends: hspec-discover:hspec-discover
