@@ -1,5 +1,5 @@
--- |  liBro App Backend
-module LiBro where
+-- |  Dummy module to test API doc generation and testing
+module Answer where
 
 -- |  The constant answer to life, the universe and everything.
 answer  :: Num a

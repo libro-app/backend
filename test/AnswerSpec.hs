@@ -1,9 +1,9 @@
-module LiBroSpec where
+module AnswerSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
-import LiBro
+import Answer
 
 spec :: Spec
 spec = describe "Answer to life, universe and everything" $ do
