@@ -47,16 +47,12 @@ defaultConfig = describe "Default config values" $ do
 parsing :: Spec
 parsing = describe "Configuration parsing" $ do
   context "With simple values" $
-    it "parse correct simple values" $
-      parseConfig simpleI `shouldBe` Right simpleC
+    it "parse correct simple values" $ do
+      let simple = Config $ Storage "foo" "bar" "baz"
+      parseConfig (writeConfig simple) `shouldBe` Right simple
   context "With invalid ini input" $
-    it "Parse result should be a Left" $ isLeft (parseConfig "42")
+    it "Parse result should be a Left" $
+      parseConfig "42" `shouldSatisfy` isLeft
   context "With arbitrary configuration" $
     it "parseConfig . writeConfig = Right" $
       property $ \c -> parseConfig (writeConfig c) `shouldBe` Right c
-  where simpleI = T.unlines [ "[storage]"
-                            , "directory = foo"
-                            , "tasks-file = bar"
-                            , "tracking-file = baz"
-                            ]
-        simpleC = Config $ Storage "foo" "bar" "baz"
