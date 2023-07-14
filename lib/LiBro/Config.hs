@@ -1,4 +1,4 @@
--- |  Configuration (file) handling
+-- |  Configuration (file) handling.
 module LiBro.Config where
 
 import Data.Default
@@ -21,6 +21,8 @@ data Config = Config
 instance Default Config where
   def = Config def
 
+-- |  Parses a 'Config' value from a given 'Text'
+--    or gives a parsing error message.
 parseConfig :: Text -> Either String Config
 parseConfig = flip parseIniFile $ do
   st <- section "storage" $
