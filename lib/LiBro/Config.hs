@@ -4,6 +4,8 @@ module LiBro.Config where
 import Data.Default
 import Data.Ini.Config
 import Data.Text
+import qualified Data.Text.IO as TIO
+import System.IO
 
 data StorageConfig = Storage
   { directory     :: FilePath
@@ -31,3 +33,18 @@ parseConfig = flip parseIniFile $ do
             <*> fieldOf "tracking-file" string
   return $ Config st
 
+-- |  Reads a 'Config' value from @config.ini@.
+--    Prints parsing error messages to @STDERR@ when failing.
+readConfig :: IO (Maybe Config)
+readConfig = readConfigFrom "config.ini"
+
+-- |  Reads a 'Config' value from the given file path.
+--    Prints parsing error messages to @STDERR@ when failing.
+readConfigFrom :: FilePath -> IO (Maybe Config)
+readConfigFrom fp = do
+  content <- TIO.readFile fp
+  case parseConfig content of
+    Right config  -> return (Just config)
+    Left errorMsg -> do
+      hPutStrLn stderr $ "Error parsing '" ++ fp ++ ":\n" ++ errorMsg
+      return Nothing

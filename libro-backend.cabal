@@ -42,5 +42,7 @@ test-suite libro-backend-test
                     , QuickCheck
                     , libro-backend
                     , data-default
+                    , silently
+                    , temporary
                     , text
   build-tool-depends: hspec-discover:hspec-discover

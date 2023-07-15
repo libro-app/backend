@@ -5,9 +5,13 @@ import Test.QuickCheck
 
 import LiBro.Config
 import Data.Default
+import Data.Maybe
 import Data.Either
 import Data.Text (Text)
 import qualified Data.Text as T
+import System.IO
+import System.IO.Temp
+import System.IO.Silently
 
 -- This is maybe too easy, but it works OK
 -- with Arbitrary Config below
@@ -34,6 +38,7 @@ spec :: Spec
 spec = describe "INI file configuration" $ do
   defaultConfig
   parsing
+  reading
 
 defaultConfig :: Spec
 defaultConfig = describe "Default config values" $ do
@@ -56,3 +61,23 @@ parsing = describe "Configuration parsing" $ do
   context "With arbitrary configuration" $
     it "parseConfig . writeConfig = Right" $
       property $ \c -> parseConfig (writeConfig c) `shouldBe` Right c
+
+reading :: Spec
+reading = describe "Reading configuration from file" $ do
+  context "With existing test config file" $ do
+    let simple = Config $ Storage "bar" "baz" "quux"
+    config <- runIO $ withSystemTempFile "config.ini" $ \fp h -> do
+      hPutStr h (T.unpack $ writeConfig simple) >> hClose h
+      readConfigFrom fp
+    it "Extract correct configuration" $
+      config `shouldBe` Just simple
+
+  context "With invalid file contents" $ do
+    (output, result) <- runIO $ withSystemTempFile "config.ini" $ \fp h -> do
+      hPutStr h "ILLEGAL INI" >> hClose h
+      hCapture [stderr] $ readConfigFrom fp
+    it "No result" $
+      result `shouldSatisfy` isNothing
+    it "Get parser error message" $ do
+      output `shouldStartWith` "Error parsing"
+      output `shouldContain` "ILLEGAL INI"
