@@ -58,7 +58,7 @@ parsing = describe "Configuration parsing" $ do
       parseConfig (writeConfig simple) `shouldBe` Right simple
 
   context "With invalid ini input" $
-    it "Parse result should be a Left" $
+    it "parse result should be a Left" $
       parseConfig "42" `shouldSatisfy` isLeft
 
   context "With arbitrary configuration" $
@@ -73,15 +73,15 @@ reading = describe "Reading configuration from file" $ do
     config <- runIO $ withSystemTempFile "config.ini" $ \fp h -> do
       hPutStr h (T.unpack $ writeConfig simple) >> hClose h
       readConfigFrom fp
-    it "Extract correct configuration" $
+    it "extract correct configuration" $
       config `shouldBe` Just simple
 
   context "With invalid file contents" $ do
     (output, result) <- runIO $ withSystemTempFile "config.ini" $ \fp h -> do
       hPutStr h "ILLEGAL INI" >> hClose h
       hCapture [stderr] $ readConfigFrom fp
-    it "No result" $
+    it "no result" $
       result `shouldSatisfy` isNothing
-    it "Get parser error message" $ do
+    it "get parser error message" $ do
       output `shouldStartWith` "Error parsing"
       output `shouldContain` "ILLEGAL INI"
