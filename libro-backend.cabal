@@ -12,8 +12,13 @@ common warnings
 
 library
   default-language:   Haskell2010
-  exposed-modules:
+  default-extensions: OverloadedStrings
+  exposed-modules:    LiBro.Config
   build-depends:      base >=4.14.0.0
+                    , config-ini
+                    , data-default
+                    , filepath
+                    , text
   hs-source-dirs:     lib
 
 executable libro-backend
@@ -25,12 +30,17 @@ executable libro-backend
 
 test-suite libro-backend-test
   default-language:   Haskell2010
+  default-extensions: OverloadedStrings
   type:               exitcode-stdio-1.0
   hs-source-dirs:     test
-  other-modules:
+  other-modules:      LiBro.ConfigSpec
   main-is:            run-all-tests.hs
   build-depends:      base >=4.14.0.0
                     , hspec
                     , QuickCheck
                     , libro-backend
+                    , data-default
+                    , silently
+                    , temporary
+                    , text
   build-tool-depends: hspec-discover:hspec-discover
