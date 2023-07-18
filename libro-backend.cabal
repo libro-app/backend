@@ -14,8 +14,10 @@ library
   default-language:   Haskell2010
   default-extensions: OverloadedStrings
   exposed-modules:    LiBro.Config
+                    , LiBro.Util
   build-depends:      base >=4.14.0.0
                     , config-ini
+                    , containers
                     , data-default
                     , filepath
                     , text
@@ -34,11 +36,13 @@ test-suite libro-backend-test
   type:               exitcode-stdio-1.0
   hs-source-dirs:     test
   other-modules:      LiBro.ConfigSpec
+                    , LiBro.UtilSpec
   main-is:            run-all-tests.hs
   build-depends:      base >=4.14.0.0
                     , hspec
                     , QuickCheck
                     , libro-backend
+                    , containers
                     , data-default
                     , silently
                     , temporary
