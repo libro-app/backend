@@ -13,9 +13,12 @@ common warnings
 library
   default-language:   Haskell2010
   default-extensions: OverloadedStrings
+                    , DeriveGeneric
   exposed-modules:    LiBro.Config
+                    , LiBro.Data
                     , LiBro.Util
   build-depends:      base >=4.14.0.0
+                    , aeson
                     , config-ini
                     , containers
                     , data-default
