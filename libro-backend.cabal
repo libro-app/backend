@@ -16,14 +16,19 @@ library
                     , DeriveGeneric
   exposed-modules:    LiBro.Config
                     , LiBro.Data
+                    , LiBro.Data.Storage
                     , LiBro.Util
   build-depends:      base >=4.14.0.0
                     , aeson
+                    , attoparsec
+                    , bytestring
+                    , cassava
                     , config-ini
                     , containers
                     , data-default
                     , filepath
                     , text
+                    , vector
   hs-source-dirs:     lib
 
 executable libro-backend
@@ -39,15 +44,18 @@ test-suite libro-backend-test
   type:               exitcode-stdio-1.0
   hs-source-dirs:     test
   other-modules:      LiBro.ConfigSpec
+                    , LiBro.Data.StorageSpec
                     , LiBro.UtilSpec
   main-is:            run-all-tests.hs
   build-depends:      base >=4.14.0.0
                     , hspec
                     , QuickCheck
                     , libro-backend
+                    , cassava
                     , containers
                     , data-default
                     , silently
                     , temporary
                     , text
+                    , vector
   build-tool-depends: hspec-discover:hspec-discover
