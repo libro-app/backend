@@ -21,13 +21,14 @@ taskCsv = describe "Convert tasks <-> CSV" $ do
         `shouldBe` csv
 
   context "With given invalid CSV data" $ do
-    let result = decodeByName "LOL WUT" :: Either String (Header, Vector TaskRecord)
+    let result = decodeByName "LOL WUT"
+          :: Either String (Header, Vector TaskRecord)
     it "Get error message" $ do
       result `shouldSatisfy` isLeft
       fromLeft "" result `shouldStartWith` "parse error"
 
   context "With given CSV data" $ do
-    let result = decodeByName csv :: Either String (Header, Vector TaskRecord)
+    let result = decodeByName csv
     it "Correct tasks data" $
       result `shouldBe`
         Right (headerOrder (head tasks), V.fromList tasks)
