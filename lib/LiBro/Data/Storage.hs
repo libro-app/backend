@@ -16,7 +16,7 @@ instance ToField IdList where
   toField = B.pack . show
 
 data TaskRecord = TaskRecord
-  { tid           :: Int
+  { trid          :: Int
   , parentTid     :: Maybe Int
   , tTitle        :: Text
   , tDescription  :: Text

@@ -35,7 +35,7 @@ taskCsv = describe "Convert tasks <-> CSV" $ do
     where tasks = [ TaskRecord 42 (Just 17) "foo" "bar" (IdList [])
                   , TaskRecord 17 Nothing "baz" "quux" (IdList [1, 67, 78926])
                   ]
-          csv   = "tid,parentTid,tTitle,tDescription,tAssignees\r\n\
+          csv   = "trid,parentTid,tTitle,tDescription,tAssignees\r\n\
                   \42,17,foo,bar,\r\n\
                   \17,,baz,quux,1 67 78926\r\n\
                   \"
