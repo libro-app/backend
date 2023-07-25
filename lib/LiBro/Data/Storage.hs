@@ -1,7 +1,9 @@
 -- |  LiBro data transformations for storage
 module LiBro.Data.Storage where
 
+import LiBro.Data
 import Data.Text (Text)
+import Data.Tree
 import Data.Csv
 import qualified Data.ByteString.Char8 as B
 import GHC.Generics
@@ -26,3 +28,17 @@ data TaskRecord = TaskRecord
 instance DefaultOrdered TaskRecord
 instance FromNamedRecord TaskRecord
 instance ToNamedRecord TaskRecord
+
+storeTasks :: Tasks -> [TaskRecord]
+storeTasks = concatMap (storeTasks' Nothing)
+  where storeTasks' parent (Node t ts) =
+          let tr  = toRecord parent t
+              trs = storeTasks' (Just $ tid t) <$> ts
+          in  tr : concat trs
+        toRecord p t = TaskRecord
+          { trid          = tid t
+          , parentTid     = p
+          , tTitle        = title t
+          , tDescription  = description t
+          , tAssignees    = IdList (pid <$> assignees t)
+          }
