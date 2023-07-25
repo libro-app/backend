@@ -26,6 +26,7 @@ data Task = Task
   } deriving (Show, Generic)
 
 instance Eq Task where (==) = (==) `on` tid
+instance Ord Task where (<=) = (<=) `on` tid
 instance ToJSON Task
 instance FromJSON Task
 

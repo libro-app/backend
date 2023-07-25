@@ -2,7 +2,10 @@
 module LiBro.Data.Storage where
 
 import LiBro.Data
+import LiBro.Util
 import Data.Text (Text)
+import Data.Map (Map, (!))
+import qualified Data.Map as M
 import Data.Tree
 import Data.Csv
 import qualified Data.ByteString.Char8 as B
@@ -41,4 +44,17 @@ storeTasks = concatMap (storeTasks' Nothing)
           , tTitle        = title t
           , tDescription  = description t
           , tAssignees    = IdList (pid <$> assignees t)
+          }
+
+loadTasks :: Map Int Person -> [TaskRecord] -> Tasks
+loadTasks persons trs =
+  let tasks       = M.fromList $ map ((,) =<< trid) trs
+      parentList  = map ((,) <$> trid <*> parentTid) trs
+      idForest    = readForest parentList
+  in  map (fmap $ fromRecord . (tasks !)) idForest
+  where fromRecord tr = Task
+          { tid         = trid tr
+          , title       = tTitle tr
+          , description = tDescription tr
+          , assignees   = (persons !) <$> ids (tAssignees tr)
           }
