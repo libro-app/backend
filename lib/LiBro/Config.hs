@@ -7,6 +7,7 @@ import Data.Text
 import qualified Data.Text.IO as TIO
 import System.IO
 
+-- |  Configuration of storage details.
 data StorageConfig = Storage
   { directory     :: FilePath
   , tasksFile     :: String
@@ -16,6 +17,7 @@ data StorageConfig = Storage
 instance Default StorageConfig where
   def = Storage "data-storage" "tasks.csv" "tracking.csv"
 
+-- |  Global settings.
 data Config = Config
   { storage :: StorageConfig
   } deriving (Eq, Show)
