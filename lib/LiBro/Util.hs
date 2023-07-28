@@ -1,3 +1,5 @@
+-- |  Helper functions and types that can be useful
+--    in more than one place.
 module LiBro.Util where
 
 import Data.Tuple

@@ -11,6 +11,8 @@ import Data.Csv
 import qualified Data.ByteString.Char8 as B
 import GHC.Generics
 
+-- |  A thin wrapper around lists of 'Int' with a simple
+--    (space-separated) 'String' representation.
 newtype IdList = IdList { ids :: [Int] } deriving Eq
 
 instance Show IdList where
@@ -20,6 +22,7 @@ instance FromField IdList where
 instance ToField IdList where
   toField = B.pack . show
 
+-- |  A data type specialized to store 'Task' information in tables.
 data TaskRecord = TaskRecord
   { trid          :: Int
   , parentTid     :: Maybe Int
@@ -32,6 +35,7 @@ instance DefaultOrdered TaskRecord
 instance FromNamedRecord TaskRecord
 instance ToNamedRecord TaskRecord
 
+-- |  Store 'Task's using 'TaskRecord's.
 storeTasks :: Tasks -> [TaskRecord]
 storeTasks = concatMap (storeTasks' Nothing)
   where storeTasks' parent (Node t ts) =
@@ -46,6 +50,8 @@ storeTasks = concatMap (storeTasks' Nothing)
           , tAssignees    = IdList (pid <$> assignees t)
           }
 
+-- |  Load 'Task's from 'TaskRecord's. Needs an additional 'Map'
+--    to find 'Person's for given person ids ('Int').
 loadTasks :: Map Int Person -> [TaskRecord] -> Tasks
 loadTasks persons trs =
   let tasks       = M.fromList $ map ((,) =<< trid) trs

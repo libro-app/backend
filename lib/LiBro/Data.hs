@@ -8,6 +8,7 @@ import Data.Function
 import Data.Aeson
 import GHC.Generics
 
+-- |  A person that is assigned to 'Task's.
 data Person = Person
   { pid   :: Int
   , name  :: Text
@@ -18,6 +19,7 @@ instance Eq Person where (==) = (==) `on` pid
 instance ToJSON Person
 instance FromJSON Person
 
+-- |  Internal task representation.
 data Task = Task
   { tid         :: Int
   , title       :: Text
