@@ -2,6 +2,7 @@ module LiBro.ConfigSpec where
 
 import Test.Hspec
 import Test.QuickCheck
+import Test.Hspec.QuickCheck
 
 import LiBro.Config
 import Data.Default
@@ -61,8 +62,8 @@ parsing = describe "Configuration parsing" $ do
       parseConfig "42" `shouldSatisfy` isLeft
 
   context "With arbitrary configuration" $
-    it "parseConfig . writeConfig = Right" $
-      property $ \c -> parseConfig (writeConfig c) `shouldBe` Right c
+    prop "parseConfig . writeConfig = Right" $
+      \c -> parseConfig (writeConfig c) `shouldBe` Right c
 
 reading :: Spec
 reading = describe "Reading configuration from file" $ do
