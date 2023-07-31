@@ -26,7 +26,10 @@ library
                     , config-ini
                     , containers
                     , data-default
+                    , directory
                     , filepath
+                    , process
+                    , temporary
                     , text
                     , vector
   hs-source-dirs:     lib
@@ -51,11 +54,15 @@ test-suite libro-backend-test
                     , hspec
                     , QuickCheck
                     , libro-backend
+                    , bytestring
                     , cassava
                     , containers
                     , data-default
+                    , filepath
+                    , lens
                     , silently
                     , temporary
                     , text
                     , vector
+                    , xlsx
   build-tool-depends: hspec-discover:hspec-discover

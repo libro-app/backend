@@ -4,12 +4,18 @@ module LiBro.Data.Storage where
 import LiBro.Data
 import LiBro.Util
 import Data.Text (Text)
+import Data.ByteString (ByteString)
+import qualified Data.ByteString as BS
 import Data.Map (Map, (!))
 import qualified Data.Map as M
 import Data.Tree
 import Data.Csv
 import qualified Data.ByteString.Char8 as B
 import GHC.Generics
+import System.IO.Temp
+import System.FilePath
+import System.Directory
+import System.Process
 
 -- |  A thin wrapper around lists of 'Int' with a simple
 --    (space-separated) 'String' representation.
@@ -64,3 +70,17 @@ loadTasks persons trs =
           , description = tDescription tr
           , assignees   = (persons !) <$> ids (tAssignees tr)
           }
+
+-- |  Store given CSV data as Excel spreadsheet. Stores the given
+--    CSV data to a temporary file that is deleted afterwards and
+--    uses the (hopefully) installed @libreoffice@ to convert. The
+--    CSV data is stored in the (first) worksheet named @export@.
+storeCSVasXLSX :: FilePath -> ByteString -> IO ()
+storeCSVasXLSX fp csv = do
+  withSystemTempDirectory "excel-export" $ \tdir -> do
+    let csvFile   = tdir </> "export.csv"
+    let xlsxFile  = tdir </> "export.xlsx"
+    BS.writeFile csvFile csv
+    callProcess "libreoffice"
+      ["--calc", "--convert-to", "xlsx", "--outdir", tdir, csvFile]
+    renameFile xlsxFile fp

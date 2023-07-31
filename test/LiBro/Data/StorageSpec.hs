@@ -4,18 +4,25 @@ import Test.Hspec
 
 import LiBro.Data
 import LiBro.Data.Storage
+import qualified Data.ByteString.Lazy as BS
+import Data.Maybe
 import Data.Either
 import Data.Vector (Vector)
 import qualified Data.Vector as V
 import Data.Map
 import Data.Tree
 import Data.Csv
+import Codec.Xlsx
+import Control.Lens
+import System.FilePath
+import System.IO.Temp
 
 spec :: Spec
 spec = describe "Data storage" $ do
   taskCsv
   tasksToRecords
   recordsToTasks
+  excelExport
 
 taskCsv :: Spec
 taskCsv = describe "Convert TaskRecords <-> CSV" $ do
@@ -95,3 +102,28 @@ recordsToTasks = describe "TaskRecord -> Task" $ do
           ]
     it "Correct task forest" $
       loadTasks persons taskRecords `shouldBe` taskForest
+
+excelExport :: Spec
+excelExport = describe "Excel export" $ do
+
+  context "Simple CSV -> XLSX conversion" $ do
+    result <- runIO $ withSystemTempDirectory "excel-export" $ \tdir -> do
+      let xlsxFile = tdir </> "data.xlsx"
+      storeCSVasXLSX xlsxFile "foo,bar\r\n42,17\r\n"
+      xlsxBS <- BS.readFile xlsxFile
+      return $ toXlsx xlsxBS ^? ixSheet "export"
+    it "Got a result" $
+      result `shouldSatisfy` isJust
+    let sheet   = fromJust result
+        content = do
+          h1 <- sheet ^? ixCell (1,1) . cellValue . _Just
+          h2 <- sheet ^? ixCell (1,2) . cellValue . _Just
+          v1 <- sheet ^? ixCell (2,1) . cellValue . _Just
+          v2 <- sheet ^? ixCell (2,2) . cellValue . _Just
+          return [(h1,h2), (v1,v2)]
+    it "Got all table cells" $
+      content `shouldSatisfy` isJust
+    it "Correct table values" $
+      fromJust content `shouldBe` [ (CellText "foo", CellText "bar")
+                                  , (CellDouble 42, CellDouble 17)
+                                  ]

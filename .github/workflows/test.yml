@@ -8,7 +8,7 @@ jobs:
     steps:
 
     - name: Set up LibreOffice
-      run: sudo apt install -y libreoffice
+      run: sudo apt install -y libreoffice libexpat1-dev libbz2-dev
 
     - name: Set up haskell
       uses: haskell/actions/setup@v2
