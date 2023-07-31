@@ -7,6 +7,9 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
 
+    - name: Set up LibreOffice
+      run: sudo apt install -y libreoffice
+
     - name: Set up haskell
       uses: haskell/actions/setup@v2
       with:
