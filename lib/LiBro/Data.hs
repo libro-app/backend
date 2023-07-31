@@ -1,8 +1,7 @@
 -- |  Little Brother data representation
 module LiBro.Data where
 
-import Data.Text (Text)
-import qualified Data.Text as T
+import Data.Text
 import Data.Graph
 import Data.Function
 import Data.Aeson

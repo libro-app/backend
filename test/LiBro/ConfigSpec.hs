@@ -7,8 +7,7 @@ import LiBro.Config
 import Data.Default
 import Data.Maybe
 import Data.Either
-import Data.Text (Text)
-import qualified Data.Text as T
+import Data.Text as T
 import System.IO
 import System.IO.Temp
 import System.IO.Silently

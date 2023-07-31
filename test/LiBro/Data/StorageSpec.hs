@@ -7,8 +7,7 @@ import LiBro.Data.Storage
 import Data.Either
 import Data.Vector (Vector)
 import qualified Data.Vector as V
-import Data.Map (Map)
-import qualified Data.Map as M
+import Data.Map
 import Data.Tree
 import Data.Csv
 
@@ -74,7 +73,7 @@ recordsToTasks :: Spec
 recordsToTasks = describe "TaskRecord -> Task" $ do
 
   context "With given simple track records and person table" $ do
-    let persons = M.fromList
+    let persons = fromList
           [ (17, Person 17 "Nina Schreubenmyrthe" "foo@bar")
           , (42, Person 42 "Eugen Hammersbald" "baz@quux")
           ]
