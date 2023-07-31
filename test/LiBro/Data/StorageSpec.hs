@@ -18,7 +18,7 @@ spec = describe "Data storage" $ do
   recordsToTasks
 
 taskCsv :: Spec
-taskCsv = describe "Convert tasks <-> CSV" $ do
+taskCsv = describe "Convert TaskRecords <-> CSV" $ do
 
   context "With given task data" $ do
     it "Correct CSV output" $
