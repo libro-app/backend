@@ -1,6 +1,9 @@
 module LiBro.Data.StorageSpec where
 
 import Test.Hspec
+import Test.QuickCheck
+import Test.Hspec.QuickCheck
+import Test.QuickCheck.Arbitrary.Generic
 
 import LiBro.Data
 import LiBro.Data.Storage
@@ -17,12 +20,32 @@ import Control.Lens
 import System.FilePath
 import System.IO.Temp
 
+instance Arbitrary IdList where
+  arbitrary = genericArbitrary
+
 spec :: Spec
 spec = describe "Data storage" $ do
+  idList
   taskCsv
   tasksToRecords
   recordsToTasks
   excelExport
+
+idList :: Spec
+idList = describe "IdList String representation" $ do
+
+  context "IdList -> String" $ do
+    prop "Correct space-separated numbers" $
+      \idl@(IdList is) -> idListToStr idl `shouldBe` unwords (show <$> is)
+    prop "show behaves like idListToStr" $
+      \idl -> show idl `shouldBe` idListToStr idl
+
+  context "String -> IdList" $ do
+    prop "Correct space-separated number parsing" $
+      \is -> strToIdList (unwords (show <$> is)) `shouldBe` IdList is
+    prop "read behaves like strToIdList" $
+      \is ->  let isStr = unwords (show <$> (is :: [Int]))
+              in  read isStr `shouldBe` strToIdList isStr
 
 taskCsv :: Spec
 taskCsv = describe "Convert TaskRecords <-> CSV" $ do

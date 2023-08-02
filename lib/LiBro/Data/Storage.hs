@@ -19,12 +19,22 @@ import System.Process
 
 -- |  A thin wrapper around lists of 'Int' with a simple
 --    (space-separated) 'String' representation.
-newtype IdList = IdList { ids :: [Int] } deriving Eq
+newtype IdList = IdList { ids :: [Int] } deriving (Eq, Generic)
+
+-- |  Simple 'String' representation of an 'IdList': space-separated numbers.
+idListToStr :: IdList -> String
+idListToStr = unwords . map show . ids
+
+-- |  Reads space-separated 'Int's to an 'IdList'.
+strToIdList :: String -> IdList
+strToIdList = IdList . map read . words
 
 instance Show IdList where
-  show = unwords . map show . ids
+  show = idListToStr
+instance Read IdList where
+  readsPrec _ str = [(strToIdList str, "")]
 instance FromField IdList where
-  parseField = fmap (IdList . map read . words) . parseField
+  parseField = fmap read . parseField
 instance ToField IdList where
   toField = B.pack . show
 

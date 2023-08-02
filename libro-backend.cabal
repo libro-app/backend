@@ -53,6 +53,7 @@ test-suite libro-backend-test
   build-depends:      base >=4.14.0.0
                     , hspec
                     , QuickCheck
+                    , generic-arbitrary
                     , libro-backend
                     , bytestring
                     , cassava
