@@ -3,11 +3,13 @@ module LiBro.Data.StorageSpec where
 import Test.Hspec
 import Test.QuickCheck
 import Test.Hspec.QuickCheck
+import Data.Text.Arbitrary
 import Test.QuickCheck.Arbitrary.Generic
 
 import LiBro.Data
 import LiBro.Data.Storage
 import qualified Data.ByteString.Lazy as BS
+import qualified Data.Text as T
 import Data.Maybe
 import Data.Either
 import Data.Vector (Vector)
@@ -19,6 +21,7 @@ import Codec.Xlsx
 import Control.Lens
 import System.FilePath
 import System.IO.Temp
+import Control.Monad
 
 instance Arbitrary IdList where
   arbitrary = genericArbitrary
@@ -150,3 +153,36 @@ excelExport = describe "Excel export" $ do
       fromJust content `shouldBe` [ (CellText "foo", CellText "bar")
                                   , (CellDouble 42, CellDouble 17)
                                   ]
+
+  context "TaskRecords -> XLSX" $ do
+    let taskRecord = TaskRecord 42 Nothing "foo" "bar" (IdList [17, 37])
+    result <- runIO $ withSystemTempDirectory "excel-export" $ \tdir -> do
+      let xlsxFile = tdir </> "data.xlsx"
+      storeCSVasXLSX xlsxFile (encodeDefaultOrderedByName [taskRecord])
+      xlsxBS <- BS.readFile xlsxFile
+      return $ toXlsx xlsxBS ^? ixSheet "export"
+    it "Got a result" $
+      result `shouldSatisfy` isJust
+    let sheet = fromJust result
+        parsedSheet = do
+          (CellText h1) <- sheet ^? ixCell (1,1) . cellValue . _Just
+          (CellText h2) <- sheet ^? ixCell (1,2) . cellValue . _Just
+          (CellText h3) <- sheet ^? ixCell (1,3) . cellValue . _Just
+          (CellText h4) <- sheet ^? ixCell (1,4) . cellValue . _Just
+          (CellText h5) <- sheet ^? ixCell (1,5) . cellValue . _Just
+          let columns = [h1, h2, h3, h4, h5]
+          (CellDouble xTid) <- sheet ^? ixCell (2,1) . cellValue . _Just
+          guard.isNothing $ sheet ^? ixCell (2,2) . cellValue . _Just
+          (CellText xTitle) <- sheet ^? ixCell (2,3) . cellValue . _Just
+          (CellText xDescr) <- sheet ^? ixCell (2,4) . cellValue . _Just
+          (CellText xAss)   <- sheet ^? ixCell (2,5) . cellValue . _Just
+          let record = TaskRecord (floor xTid) Nothing
+                        xTitle xDescr (read $ T.unpack xAss)
+          return (columns, [record])
+    it "Sheet parsed correctly" $
+      parsedSheet `shouldSatisfy` isJust
+    let (Just (header, records)) = parsedSheet
+    it "Correct header columns" $
+      header `shouldBe` T.words "trid parentTid tTitle tDescription tAssignees"
+    it "Correct task records" $
+      records `shouldBe` [taskRecord]

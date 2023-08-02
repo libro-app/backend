@@ -4,8 +4,8 @@ module LiBro.Data.Storage where
 import LiBro.Data
 import LiBro.Util
 import Data.Text (Text)
-import Data.ByteString (ByteString)
-import qualified Data.ByteString as BS
+import Data.ByteString.Lazy (ByteString)
+import qualified Data.ByteString.Lazy as BS
 import Data.Map (Map, (!))
 import qualified Data.Map as M
 import Data.Tree
@@ -47,6 +47,7 @@ data TaskRecord = TaskRecord
   , tAssignees    :: IdList
   } deriving (Eq, Show, Generic)
 
+instance ToRecord TaskRecord
 instance DefaultOrdered TaskRecord
 instance FromNamedRecord TaskRecord
 instance ToNamedRecord TaskRecord
