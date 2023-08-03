@@ -6,6 +6,7 @@ import Test.Hspec.QuickCheck
 import Data.Text.Arbitrary
 import Test.QuickCheck.Arbitrary.Generic
 
+import LiBro.Config
 import LiBro.Data
 import LiBro.Data.Storage
 import qualified Data.ByteString.Lazy as BS
@@ -17,12 +18,14 @@ import qualified Data.Vector as V
 import Data.Map
 import Data.Tree
 import Data.Csv
-import qualified Data.Vector as V
 import Codec.Xlsx
 import Control.Lens
 import System.FilePath
 import System.IO.Temp
 import Control.Monad
+
+instance Arbitrary Person where
+  arbitrary = genericArbitrary
 
 instance Arbitrary IdList where
   arbitrary = genericArbitrary
@@ -35,6 +38,7 @@ spec = describe "Data storage" $ do
   recordsToTasks
   excelExport
   excelImport
+  personStorage
 
 idList :: Spec
 idList = describe "IdList String representation" $ do
@@ -204,3 +208,13 @@ excelImport = describe "Excel import" $ do
     it "Load correct TaskRecord" $
       taskRecords `shouldBe`
         Right (V.fromList [TaskRecord 42 Nothing "foo" "bar" (IdList [17, 37])])
+
+personStorage :: Spec
+personStorage = describe "XSLX storage of Person data" $ do
+  modifyMaxSuccess (const 5) $
+    prop "Load . store = id" $ \persons -> ioProperty $ do
+      withSystemTempDirectory "person-storage" $ \tdir -> do
+        let config = def { storage = def { directory = tdir }}
+        storePersons config persons
+        loadedPersons <- loadPersons config
+        return $ loadedPersons === persons

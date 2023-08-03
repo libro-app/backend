@@ -1,6 +1,7 @@
 -- |  LiBro data transformations for storage
 module LiBro.Data.Storage where
 
+import LiBro.Config
 import LiBro.Data
 import LiBro.Util
 import Data.Text (Text)
@@ -11,6 +12,7 @@ import qualified Data.Map as M
 import Data.Tree
 import Data.Csv
 import qualified Data.ByteString.Char8 as B
+import qualified Data.Vector as V
 import GHC.Generics
 import System.IO.Temp
 import System.FilePath
@@ -93,8 +95,11 @@ storeCSVasXLSX fp csv = do
     let csvFile   = tdir </> "export.csv"
     let xlsxFile  = tdir </> "export.xlsx"
     BS.writeFile csvFile csv
-    callProcess "libreoffice"
-      ["--calc", "--convert-to", "xlsx", "--outdir", tdir, csvFile]
+    callCommand $ unwords
+      [ "libreoffice --calc --convert-to xlsx"
+      , "--outdir", tdir, csvFile
+      , "> /dev/null"
+      ]
     renameFile xlsxFile fp
 
 -- |  Load CSV from an Excel spreadsheet using @libreoffice@.
@@ -104,6 +109,28 @@ loadCSVfromXLSX fp = do
     let csvFile   = tdir </> "import.csv"
     let xlsxFile  = tdir </> "import.xlsx"
     copyFile fp xlsxFile
-    callProcess "libreoffice"
-      ["--calc", "--convert-to", "csv", "--outdir", tdir, xlsxFile]
+    callCommand $ unwords
+      [ "libreoffice --calc --convert-to csv"
+      , "--outdir", tdir, xlsxFile
+      , "> /dev/null"
+      ]
     BS.readFile csvFile
+
+-- |  Store a list of 'Person's at the configured storage space
+--    via 'Config'.
+storePersons :: Config -> [Person] -> IO ()
+storePersons conf persons = do
+  let sconf = storage conf
+      fp    = directory sconf </> personFile sconf
+      csv   = encodeDefaultOrderedByName persons
+  storeCSVasXLSX fp csv
+
+-- |  Load a list of 'Person's from the configured storage space
+--    via 'Config'.
+loadPersons :: Config -> IO [Person]
+loadPersons conf = do
+  let sconf = storage conf
+      fp    = directory sconf </> personFile sconf
+  csv <- loadCSVfromXLSX fp
+  let (Right records) = decode HasHeader csv
+  return $ V.toList records

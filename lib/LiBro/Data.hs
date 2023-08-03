@@ -6,6 +6,7 @@ import Data.Graph
 import Data.Function
 import Data.Aeson
 import GHC.Generics
+import Data.Csv
 
 -- |  A person that is assigned to 'Task's.
 data Person = Person
@@ -17,6 +18,9 @@ data Person = Person
 instance Eq Person where (==) = (==) `on` pid
 instance ToJSON Person
 instance FromJSON Person
+instance FromRecord Person
+instance DefaultOrdered Person
+instance ToNamedRecord Person
 
 -- |  Internal task representation.
 data Task = Task
