@@ -45,8 +45,8 @@ defaultConfig = describe "Default config values" $ do
   describe "Storage configuration" $ do
     let st = storage dc
     it "directory"      $ directory     st `shouldBe` "data-storage"
-    it "tasks file"     $ tasksFile     st `shouldBe` "tasks.csv"
-    it "tracking file"  $ trackingFile  st `shouldBe` "tracking.csv"
+    it "tasks file"     $ tasksFile     st `shouldBe` "tasks.xlsx"
+    it "tracking file"  $ trackingFile  st `shouldBe` "tracking.xlsx"
   where dc = def :: Config
 
 parsing :: Spec

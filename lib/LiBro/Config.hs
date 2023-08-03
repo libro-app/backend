@@ -15,7 +15,7 @@ data StorageConfig = Storage
   } deriving (Eq, Show)
 
 instance Default StorageConfig where
-  def = Storage "data-storage" "tasks.csv" "tracking.csv"
+  def = Storage "data-storage" "tasks.xlsx" "tracking.xlsx"
 
 -- |  Global settings.
 data Config = Config
