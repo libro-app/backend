@@ -19,6 +19,7 @@ writeConfig :: Config -> Text
 writeConfig c = T.unlines
   [ "[storage]"
   , "directory = "      <> T.pack (directory s)
+  , "person-file = "    <> T.pack (personFile s)
   , "tasks-file = "     <> T.pack (tasksFile s)
   , "tracking-file = "  <> T.pack (trackingFile s)
   ] <> "\n"
@@ -26,7 +27,7 @@ writeConfig c = T.unlines
 
 instance Arbitrary Config where
   arbitrary = do
-    st <- Storage <$> name <*> name <*> name
+    st <- Storage <$> name <*> name <*> name <*> name
     return $ Config st
     where chars = [choose ('a','z'), choose ('A','Z'), return '/']
           name  = do  a   <- oneof chars
@@ -45,6 +46,7 @@ defaultConfig = describe "Default config values" $ do
   describe "Storage configuration" $ do
     let st = storage dc
     it "directory"      $ directory     st `shouldBe` "data-storage"
+    it "person file"    $ personFile    st `shouldBe` "persons.xlsx"
     it "tasks file"     $ tasksFile     st `shouldBe` "tasks.xlsx"
     it "tracking file"  $ trackingFile  st `shouldBe` "tracking.xlsx"
   where dc = def :: Config
@@ -54,7 +56,7 @@ parsing = describe "Configuration parsing" $ do
 
   context "With simple values" $
     it "parse correct simple values" $ do
-      let simple = Config $ Storage "foo" "bar" "baz"
+      let simple = Config $ Storage "foo" "bar" "baz" "quux"
       parseConfig (writeConfig simple) `shouldBe` Right simple
 
   context "With invalid ini input" $
@@ -69,7 +71,7 @@ reading :: Spec
 reading = describe "Reading configuration from file" $ do
 
   context "With existing test config file" $ do
-    let simple = Config $ Storage "bar" "baz" "quux"
+    let simple = Config $ Storage "bar" "baz" "quux" "quuux"
     config <- runIO $ withSystemTempFile "config.ini" $ \fp h -> do
       hPutStr h (T.unpack $ writeConfig simple) >> hClose h
       readConfigFrom fp
