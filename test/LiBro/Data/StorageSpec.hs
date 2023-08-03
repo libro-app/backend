@@ -135,7 +135,7 @@ excelExport :: Spec
 excelExport = describe "Excel export" $ do
 
   context "Simple CSV -> XLSX conversion" $ do
-    result <- runIO $ withSystemTempDirectory "excel-export" $ \tdir -> do
+    result <- runIO $ withSystemTempDirectory "test-export" $ \tdir -> do
       let xlsxFile = tdir </> "data.xlsx"
       storeCSVasXLSX xlsxFile "foo,bar\r\n42,17\r\n"
       xlsxBS <- BS.readFile xlsxFile
@@ -158,7 +158,7 @@ excelExport = describe "Excel export" $ do
 
   context "TaskRecords -> XLSX" $ do
     let taskRecord = TaskRecord 42 Nothing "foo" "bar" (IdList [17, 37])
-    result <- runIO $ withSystemTempDirectory "excel-export" $ \tdir -> do
+    result <- runIO $ withSystemTempDirectory "test-export" $ \tdir -> do
       let xlsxFile = tdir </> "data.xlsx"
       storeCSVasXLSX xlsxFile (encodeDefaultOrderedByName [taskRecord])
       xlsxBS <- BS.readFile xlsxFile
