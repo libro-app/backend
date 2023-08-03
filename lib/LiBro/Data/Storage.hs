@@ -47,6 +47,7 @@ data TaskRecord = TaskRecord
   , tAssignees    :: IdList
   } deriving (Eq, Show, Generic)
 
+instance FromRecord TaskRecord
 instance ToRecord TaskRecord
 instance DefaultOrdered TaskRecord
 instance FromNamedRecord TaskRecord
@@ -95,3 +96,14 @@ storeCSVasXLSX fp csv = do
     callProcess "libreoffice"
       ["--calc", "--convert-to", "xlsx", "--outdir", tdir, csvFile]
     renameFile xlsxFile fp
+
+-- |  Load CSV from an Excel spreadsheet using @libreoffice@.
+loadCSVfromXLSX :: FilePath -> IO ByteString
+loadCSVfromXLSX fp = do
+  withSystemTempDirectory "excel-import" $ \tdir -> do
+    let csvFile   = tdir </> "import.csv"
+    let xlsxFile  = tdir </> "import.xlsx"
+    copyFile fp xlsxFile
+    callProcess "libreoffice"
+      ["--calc", "--convert-to", "csv", "--outdir", tdir, xlsxFile]
+    BS.readFile csvFile

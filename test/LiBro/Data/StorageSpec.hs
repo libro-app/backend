@@ -17,6 +17,7 @@ import qualified Data.Vector as V
 import Data.Map
 import Data.Tree
 import Data.Csv
+import qualified Data.Vector as V
 import Codec.Xlsx
 import Control.Lens
 import System.FilePath
@@ -33,6 +34,7 @@ spec = describe "Data storage" $ do
   tasksToRecords
   recordsToTasks
   excelExport
+  excelImport
 
 idList :: Spec
 idList = describe "IdList String representation" $ do
@@ -186,3 +188,19 @@ excelExport = describe "Excel export" $ do
       header `shouldBe` T.words "trid parentTid tTitle tDescription tAssignees"
     it "Correct task records" $
       records `shouldBe` [taskRecord]
+
+excelImport :: Spec
+excelImport = describe "Excel import" $ do
+
+  context "With simple XLSX file" $ do
+    csv <- runIO $ loadCSVfromXLSX "test/storage-files/simple.xlsx"
+    let csvData = decode NoHeader csv :: Either String (Vector (String, String))
+    it "Load correct CSV" $
+      csvData `shouldBe` Right (V.fromList [("foo", "bar"), ("17", "42")])
+
+  context "With simple TaskRecord data in XLSX file" $ do
+    csv <- runIO $ loadCSVfromXLSX "test/storage-files/tasks.xlsx"
+    let taskRecords = decode HasHeader csv
+    it "Load correct TaskRecord" $
+      taskRecords `shouldBe`
+        Right (V.fromList [TaskRecord 42 Nothing "foo" "bar" (IdList [17, 37])])
