@@ -33,6 +33,7 @@ instance Arbitrary IdList where
 
 spec :: Spec
 spec = describe "Data storage" $ do
+  personMapping
   idList
   taskCsv
   tasksToRecords
@@ -41,6 +42,11 @@ spec = describe "Data storage" $ do
   excelImport
   personStorage
   taskStorage
+
+personMapping :: Spec
+personMapping = describe "Map creation for Persons" $ do
+  prop "Map from person IDs matches given persons" $ \persons ->
+    personMap persons `shouldBe` M.fromList (map ((,) =<< pid) persons)
 
 idList :: Spec
 idList = describe "IdList String representation" $ do
@@ -114,9 +120,9 @@ recordsToTasks :: Spec
 recordsToTasks = describe "TaskRecord -> Task" $ do
 
   context "With given simple track records and person table" $ do
-    let persons = M.fromList
-          [ (17, Person 17 "Nina Schreubenmyrthe" "foo@bar")
-          , (42, Person 42 "Eugen Hammersbald" "baz@quux")
+    let persons = personMap
+          [ Person 17 "Nina Schreubenmyrthe" "foo@bar"
+          , Person 42 "Eugen Hammersbald" "baz@quux"
           ]
         taskRecords =
           [ TaskRecord 17 Nothing "foo" "bar" (IdList [])
@@ -223,9 +229,9 @@ personStorage = describe "XSLX storage of Person data" $ do
 
 taskStorage :: Spec
 taskStorage = describe "XLSX storage of Task data" $ do
-  let persons = M.fromList
-        [ (17, Person 17 "Nina Schreubenmyrthe" "foo@bar")
-        , (42, Person 42 "Eugen Hammersbald" "baz@quux")
+  let persons = personMap
+        [ Person 17 "Nina Schreubenmyrthe" "foo@bar"
+        , Person 42 "Eugen Hammersbald" "baz@quux"
         ]
       tasks   =
         [ Node (Task 37 "fooTitle" "fooDescr" []) []

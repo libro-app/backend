@@ -19,6 +19,11 @@ import System.FilePath
 import System.Directory
 import System.Process
 
+-- |  Helper function to create a person 'Map' from 'Int' to 'Person'
+--    from a given 'Person' list. Useful for 'Task' reading functions.
+personMap :: [Person] -> Map Int Person
+personMap = M.fromList . map ((,) =<< pid)
+
 -- |  A thin wrapper around lists of 'Int' with a simple
 --    (space-separated) 'String' representation.
 newtype IdList = IdList { ids :: [Int] } deriving (Eq, Generic)
