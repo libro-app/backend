@@ -106,7 +106,7 @@ tasksToRecords = describe "Task -> TaskRecord" $ do
           , TaskRecord 667 (Just 42) "quux" "quuux" (IdList [])
           ]
     it "Correct task records" $
-      storeTasks taskForest `shouldBe` taskRecords
+      tasksToTaskRecords taskForest `shouldBe` taskRecords
 
 recordsToTasks :: Spec
 recordsToTasks = describe "TaskRecord -> Task" $ do
@@ -133,7 +133,7 @@ recordsToTasks = describe "TaskRecord -> Task" $ do
             ]
           ]
     it "Correct task forest" $
-      loadTasks persons taskRecords `shouldBe` taskForest
+      taskRecordsToTasks persons taskRecords `shouldBe` taskForest
 
 excelExport :: Spec
 excelExport = describe "Excel export" $ do

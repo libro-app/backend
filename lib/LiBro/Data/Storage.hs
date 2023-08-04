@@ -56,8 +56,8 @@ instance FromNamedRecord TaskRecord
 instance ToNamedRecord TaskRecord
 
 -- |  Store 'Task's using 'TaskRecord's.
-storeTasks :: Tasks -> [TaskRecord]
-storeTasks = concatMap (storeTasks' Nothing)
+tasksToTaskRecords :: Tasks -> [TaskRecord]
+tasksToTaskRecords = concatMap (storeTasks' Nothing)
   where storeTasks' parent (Node t ts) =
           let tr  = toRecord parent t
               trs = storeTasks' (Just $ tid t) <$> ts
@@ -72,8 +72,8 @@ storeTasks = concatMap (storeTasks' Nothing)
 
 -- |  Load 'Task's from 'TaskRecord's. Needs an additional 'Map'
 --    to find 'Person's for given person ids ('Int').
-loadTasks :: Map Int Person -> [TaskRecord] -> Tasks
-loadTasks persons trs =
+taskRecordsToTasks :: Map Int Person -> [TaskRecord] -> Tasks
+taskRecordsToTasks persons trs =
   let tasks       = M.fromList $ map ((,) =<< trid) trs
       parentList  = map ((,) <$> trid <*> parentTid) trs
       idForest    = readForest parentList
