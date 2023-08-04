@@ -134,3 +134,23 @@ loadPersons conf = do
   csv <- loadCSVfromXLSX fp
   let (Right records) = decode HasHeader csv
   return $ V.toList records
+
+-- |  Store 'Tasks' at the configured storage space via 'Config'.
+storeTasks :: Config -> Tasks -> IO ()
+storeTasks conf tasks = do
+  let sconf = storage conf
+      fp    = directory sconf </> tasksFile sconf
+      trs   = tasksToTaskRecords tasks
+      csv   = encodeDefaultOrderedByName trs
+  storeCSVasXLSX fp csv
+
+-- |  Load 'Tasks' from the configured storage space via 'Config'.
+--    Needs an additional 'Map' to find 'Person's for given person
+--    ids ('Int').
+loadTasks :: Config -> Map Int Person -> IO Tasks
+loadTasks conf persons = do
+  let sconf = storage conf
+      fp    = directory sconf </> tasksFile sconf
+  csv <- loadCSVfromXLSX fp
+  let (Right records) = V.toList <$> decode HasHeader csv
+  return $ taskRecordsToTasks persons records

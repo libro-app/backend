@@ -40,6 +40,7 @@ spec = describe "Data storage" $ do
   excelExport
   excelImport
   personStorage
+  taskStorage
 
 idList :: Spec
 idList = describe "IdList String representation" $ do
@@ -219,3 +220,33 @@ personStorage = describe "XSLX storage of Person data" $ do
         storePersons config persons
         loadedPersons <- loadPersons config
         return $ loadedPersons === persons
+
+taskStorage :: Spec
+taskStorage = describe "XLSX storage of Task data" $ do
+  let persons = M.fromList
+        [ (17, Person 17 "Nina Schreubenmyrthe" "foo@bar")
+        , (42, Person 42 "Eugen Hammersbald" "baz@quux")
+        ]
+      tasks   =
+        [ Node (Task 37 "fooTitle" "fooDescr" []) []
+        , Node (Task 67 "barTitle" "barDescr" [persons ! 17])
+          [ Node (Task 87 "bazTitle" "bazDescr" [persons ! 42]) []
+          , Node (Task 97 "quuxTitle" "quuxDescr" [persons ! 17, persons ! 42]) []
+          ]
+        ]
+
+  describe "With empty data" $ do
+    loadedTasks <- runIO $ withSystemTempDirectory "task-storage" $ \tdir -> do
+      let config = def { storage = def { directory = tdir }}
+      storeTasks config []
+      loadTasks config persons
+    it "Got empty task forest" $
+      loadedTasks `shouldBe` []
+
+  describe "With some task data" $ do
+    loadedTasks <- runIO $ withSystemTempDirectory "task-storage" $ \tdir -> do
+      let config = def { storage = def { directory = tdir }}
+      storeTasks config tasks
+      loadTasks config persons
+    it "Got the right task forest" $
+      loadedTasks `shouldBe` tasks
