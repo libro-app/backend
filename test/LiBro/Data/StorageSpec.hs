@@ -15,7 +15,8 @@ import Data.Maybe
 import Data.Either
 import Data.Vector (Vector)
 import qualified Data.Vector as V
-import Data.Map
+import Data.Map ((!))
+import qualified Data.Map as M
 import Data.Tree
 import Data.Csv
 import Codec.Xlsx
@@ -112,7 +113,7 @@ recordsToTasks :: Spec
 recordsToTasks = describe "TaskRecord -> Task" $ do
 
   context "With given simple track records and person table" $ do
-    let persons = fromList
+    let persons = M.fromList
           [ (17, Person 17 "Nina Schreubenmyrthe" "foo@bar")
           , (42, Person 42 "Eugen Hammersbald" "baz@quux")
           ]
