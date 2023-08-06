@@ -1,0 +1,39 @@
+-- |  Little Brother data representation
+module LiBro.Data where
+
+import Data.Text
+import Data.Graph
+import Data.Function
+import Data.Aeson
+import GHC.Generics
+import Data.Csv
+
+-- |  A person that is assigned to 'Task's.
+data Person = Person
+  { pid   :: Int
+  , name  :: Text
+  , email :: Text
+  } deriving (Show, Generic)
+
+instance Eq Person where (==) = (==) `on` pid
+instance ToJSON Person
+instance FromJSON Person
+instance FromRecord Person
+instance DefaultOrdered Person
+instance ToNamedRecord Person
+
+-- |  Internal task representation.
+data Task = Task
+  { tid         :: Int
+  , title       :: Text
+  , description :: Text
+  , assignees   :: [Person]
+  } deriving (Show, Generic)
+
+instance Eq Task where (==) = (==) `on` tid
+instance Ord Task where (<=) = (<=) `on` tid
+instance ToJSON Task
+instance FromJSON Task
+
+-- |  The primary data type for tasks, 'Tree's of 'Task'.
+type Tasks = Forest Task

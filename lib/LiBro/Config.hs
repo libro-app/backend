@@ -10,12 +10,13 @@ import System.IO
 -- |  Configuration of storage details.
 data StorageConfig = Storage
   { directory     :: FilePath
+  , personFile    :: String
   , tasksFile     :: String
   , trackingFile  :: String
   } deriving (Eq, Show)
 
 instance Default StorageConfig where
-  def = Storage "data-storage" "tasks.csv" "tracking.csv"
+  def = Storage "data-storage" "persons.xlsx" "tasks.xlsx" "tracking.xlsx"
 
 -- |  Global settings.
 data Config = Config
@@ -31,6 +32,7 @@ parseConfig :: Text -> Either String Config
 parseConfig = flip parseIniFile $ do
   st <- section "storage" $
     Storage <$> fieldOf "directory"     string
+            <*> fieldOf "person-file"   string
             <*> fieldOf "tasks-file"    string
             <*> fieldOf "tracking-file" string
   return $ Config st

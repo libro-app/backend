@@ -7,18 +7,33 @@ license-file:         LICENSE
 author:               Mirko Westermeier
 maintainer:           mirko@westermeier.de
 
+extra-source-files:   test/storage-files/*.xlsx
+
 common warnings
   ghc-options:        -Wall
 
 library
   default-language:   Haskell2010
   default-extensions: OverloadedStrings
+                    , DeriveGeneric
   exposed-modules:    LiBro.Config
+                    , LiBro.Data
+                    , LiBro.Data.Storage
+                    , LiBro.Util
   build-depends:      base >=4.14.0.0
+                    , aeson
+                    , attoparsec
+                    , bytestring
+                    , cassava
                     , config-ini
+                    , containers
                     , data-default
+                    , directory
                     , filepath
+                    , process
+                    , temporary
                     , text
+                    , vector
   hs-source-dirs:     lib
 
 executable libro-backend
@@ -34,13 +49,24 @@ test-suite libro-backend-test
   type:               exitcode-stdio-1.0
   hs-source-dirs:     test
   other-modules:      LiBro.ConfigSpec
+                    , LiBro.Data.StorageSpec
+                    , LiBro.UtilSpec
   main-is:            run-all-tests.hs
   build-depends:      base >=4.14.0.0
                     , hspec
                     , QuickCheck
+                    , quickcheck-text
+                    , generic-arbitrary
                     , libro-backend
+                    , bytestring
+                    , cassava
+                    , containers
                     , data-default
+                    , filepath
+                    , lens
                     , silently
                     , temporary
                     , text
+                    , vector
+                    , xlsx
   build-tool-depends: hspec-discover:hspec-discover
