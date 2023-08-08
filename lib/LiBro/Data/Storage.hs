@@ -159,3 +159,18 @@ loadTasks conf persons = do
   csv <- loadCSVfromXLSX fp
   let (Right records) = V.toList <$> decode HasHeader csv
   return $ taskRecordsToTasks persons records
+
+-- |  Store a complete dataset at the 'Config'ured file system
+--    locations.
+storeData :: Config -> ([Person], Tasks) -> IO ()
+storeData conf (persons, tasks) = do
+  storePersons  conf persons
+  storeTasks    conf tasks
+
+-- |  Load a complete dataset from the 'Config'ured file system
+--    locations.
+loadData :: Config -> IO ([Person], Tasks)
+loadData conf = do
+  persons <- loadPersons  conf
+  tasks   <- loadTasks    conf (personMap persons)
+  return (persons, tasks)

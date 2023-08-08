@@ -9,6 +9,7 @@ import Test.QuickCheck.Arbitrary.Generic
 import LiBro.Config
 import LiBro.Data
 import LiBro.Data.Storage
+import LiBro.DataSpec
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.Text as T
 import Data.Maybe
@@ -42,6 +43,7 @@ spec = describe "Data storage" $ do
   excelImport
   personStorage
   taskStorage
+  dataStorage
 
 personMapping :: Spec
 personMapping = describe "Map creation for Persons" $ do
@@ -256,3 +258,37 @@ taskStorage = describe "XLSX storage of Task data" $ do
       loadTasks config persons
     it "Got the right task forest" $
       loadedTasks `shouldBe` tasks
+
+dataStorage :: Spec
+dataStorage = describe "Complete dataset" $ do
+
+  context "With simple data files" $ do
+    let persons = [ Person 1 "Foo Bar" "foo@bar.com"
+                  , Person 2 "Baz Quux" "baz@quux.com"
+                  ]
+        tasks   = [ Task 17 "t17" "d17" [persons !! 0, persons !! 1]
+                  , Task 37 "t37" "d37" [persons !! 1]
+                  , Task 42 "t42" "d42" []
+                  ]
+        tForest = [ Node (tasks !! 0)
+                    [ Node (tasks !! 1) []
+                    , Node (tasks !! 2) []
+                    ]
+                  ]
+    let conf = def { storage = def { directory = "test/storage-files/data" }}
+    (loadedPersons, loadedTasks) <- runIO $ loadData conf
+    it "Load correct persons" $
+      loadedPersons `shouldBe` persons
+    it "Load correct task forest" $
+      loadedTasks `shouldBe` tForest
+
+  context "With arbitrary datasets" $ do
+    modifyMaxSuccess (const 5) $
+      prop "load . store = id" $
+        forAll (scale (`div` 30) genPersonsTasks) $ \d -> ioProperty $ do
+          print (length (fst d), length (concatMap flatten (snd d)))
+          withSystemTempDirectory "storage" $ \tdir -> do
+            let conf = def { storage = def { directory = tdir }}
+            storeData conf d
+            loadedData <- loadData conf
+            return $ loadedData === d

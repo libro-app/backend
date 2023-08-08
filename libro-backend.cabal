@@ -8,6 +8,7 @@ author:               Mirko Westermeier
 maintainer:           mirko@westermeier.de
 
 extra-source-files:   test/storage-files/*.xlsx
+                    , test/storage-files/data/*.xlsx
 
 common warnings
   ghc-options:        -Wall
