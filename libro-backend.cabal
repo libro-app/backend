@@ -49,6 +49,7 @@ test-suite libro-backend-test
   type:               exitcode-stdio-1.0
   hs-source-dirs:     test
   other-modules:      LiBro.ConfigSpec
+                    , LiBro.DataSpec
                     , LiBro.Data.StorageSpec
                     , LiBro.UtilSpec
   main-is:            run-all-tests.hs

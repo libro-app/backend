@@ -1,8 +1,9 @@
 -- |  Little Brother data representation
 module LiBro.Data where
 
-import Data.Text
-import Data.Graph
+import Data.Text (Text)
+import qualified Data.Text as T
+import Data.Tree
 import Data.Function
 import Data.Aeson
 import GHC.Generics
@@ -37,3 +38,7 @@ instance FromJSON Task
 
 -- |  The primary data type for tasks, 'Tree's of 'Task'.
 type Tasks = Forest Task
+
+-- |  Find all 'Task's assigned to a given 'Person'.
+assignedTasks :: Person -> Tasks -> [Task]
+assignedTasks p = filter ((p `elem`) . assignees) . concatMap flatten
