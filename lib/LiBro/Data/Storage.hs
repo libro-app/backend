@@ -7,6 +7,7 @@ import LiBro.Util
 import Data.Text (Text)
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as BS
+import Data.Function
 import Data.Map (Map, (!))
 import qualified Data.Map as M
 import Data.Tree
@@ -52,8 +53,9 @@ data TaskRecord = TaskRecord
   , tTitle        :: Text
   , tDescription  :: Text
   , tAssignees    :: IdList
-  } deriving (Eq, Show, Generic)
+  } deriving (Show, Generic)
 
+instance Eq TaskRecord where (==) = (==) `on` trid
 instance FromRecord TaskRecord
 instance ToRecord TaskRecord
 instance DefaultOrdered TaskRecord
