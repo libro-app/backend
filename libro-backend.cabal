@@ -49,7 +49,9 @@ test-suite libro-backend-test
   default-extensions: OverloadedStrings
   type:               exitcode-stdio-1.0
   hs-source-dirs:     test
-  other-modules:      LiBro.ConfigSpec
+  other-modules:      LiBro.TestUtil
+                    , LiBro.TestUtilSpec
+                    , LiBro.ConfigSpec
                     , LiBro.DataSpec
                     , LiBro.Data.StorageSpec
                     , LiBro.UtilSpec

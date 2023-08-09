@@ -3,8 +3,8 @@ module LiBro.Data.StorageSpec where
 import Test.Hspec
 import Test.QuickCheck
 import Test.Hspec.QuickCheck
-import Data.Text.Arbitrary
 import Test.QuickCheck.Arbitrary.Generic
+import LiBro.TestUtil
 
 import LiBro.Config
 import LiBro.Data

@@ -4,7 +4,7 @@ import Test.Hspec
 import Test.QuickCheck
 import Test.QuickCheck.Arbitrary.Generic
 import Test.Hspec.QuickCheck
-import Data.Text.Arbitrary
+import LiBro.TestUtil
 
 import LiBro.Data
 import Data.List
