@@ -7,38 +7,7 @@ import Test.Hspec.QuickCheck
 import LiBro.TestUtil
 
 import LiBro.Data
-import Data.List
-import Data.Function
 import Data.Tree
-
--- Person generator with a given person ID.
-genPerson :: Int -> Gen Person
-genPerson pid = Person  <$> return pid
-                        <*> arbitrary
-                        <*> arbitrary
-
--- Unique person lists generator
-genPersons :: Gen [Person]
-genPersons = mapM genPerson =<< arbitrary `suchThat` unique
-  where unique = (==) <*> nub
-
--- Task generator with task ID and _allowed_ persons
-genTask :: [Person] -> Int -> Gen Task
-genTask ps tid = Task <$> return tid
-                      <*> arbitrary
-                      <*> arbitrary
-                      <*> sublistOf ps
-
-genTaskForest :: Gen Task -> Gen (Forest Task)
-genTaskForest = listOf . liftArbitrary
-
--- Generate a full data setting with non-empty persons
--- with unique person ids and tasks with valid assignees
-genPersonsTasks :: Gen ([Person], Tasks)
-genPersonsTasks = do
-  ps <- genPersons `suchThat` (not.null)
-  ts <- genTaskForest $ genTask ps =<< arbitrary
-  return (ps, ts)
 
 spec :: Spec
 spec = describe "Data handling" $ do
