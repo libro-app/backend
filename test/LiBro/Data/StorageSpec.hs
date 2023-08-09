@@ -3,13 +3,12 @@ module LiBro.Data.StorageSpec where
 import Test.Hspec
 import Test.QuickCheck
 import Test.Hspec.QuickCheck
-import Data.Text.Arbitrary
 import Test.QuickCheck.Arbitrary.Generic
+import LiBro.TestUtil
 
 import LiBro.Config
 import LiBro.Data
 import LiBro.Data.Storage
-import LiBro.DataSpec
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.Text as T
 import Data.Maybe
@@ -26,6 +25,7 @@ import System.FilePath
 import System.IO.Temp
 import Control.Monad
 
+-- Beware: Arbitrary Person has pid collisions
 instance Arbitrary Person where
   arbitrary = genericArbitrary
 
@@ -285,10 +285,10 @@ dataStorage = describe "Complete dataset" $ do
   context "With arbitrary datasets" $ do
     modifyMaxSuccess (const 5) $
       prop "load . store = id" $
-        forAll (scale (`div` 30) genPersonsTasks) $ \d -> ioProperty $ do
-          print (length (fst d), length (concatMap flatten (snd d)))
-          withSystemTempDirectory "storage" $ \tdir -> do
-            let conf = def { storage = def { directory = tdir }}
-            storeData conf d
-            loadedData <- loadData conf
-            return $ loadedData === d
+        forAll genPersonsTasks $ \d ->
+          ioProperty $ do
+            withSystemTempDirectory "storage" $ \tdir -> do
+              let conf = def { storage = def { directory = tdir }}
+              storeData conf d
+              loadedData <- loadData conf
+              return $ loadedData `shouldBe` d

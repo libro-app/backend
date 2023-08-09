@@ -8,6 +8,7 @@ import Data.Map as M
 import Data.Tree
 import Data.Maybe
 import Data.Bifunctor
+import Control.Monad.State
 
 -- |  A 'Tree'/'Forest' representation as a linear list.
 --    All entries point to their parent.
@@ -24,3 +25,17 @@ readForest pairs =
   where fill cs n = Node n $ case M.lookup n cs of
                               Nothing -> []; Just [] -> []
                               Just xs -> fill cs <$> sort xs
+
+-- |  Simple monad transformer that allows to read an increasing 'Int'.
+type CountingT m = StateT Int m
+
+-- |  Grabs the next 'Int'.
+next :: Monad m => CountingT m Int
+next = do
+  val <- get
+  modify succ
+  return val
+
+-- |  Evaluate the given action with counting from the given initial value.
+runCountingT :: Monad m => CountingT m a -> Int -> m a
+runCountingT = evalStateT

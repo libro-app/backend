@@ -17,6 +17,7 @@ data Person = Person
   } deriving (Show, Generic)
 
 instance Eq Person where (==) = (==) `on` pid
+instance Ord Person where (<=) = (<=) `on` pid
 instance ToJSON Person
 instance FromJSON Person
 instance FromRecord Person

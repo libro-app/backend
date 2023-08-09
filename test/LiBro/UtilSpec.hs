@@ -1,13 +1,17 @@
 module LiBro.UtilSpec where
 
 import Test.Hspec
+import Test.Hspec.QuickCheck
 
 import LiBro.Util
 import Data.Tree
+import Data.Functor.Identity
+import Control.Monad
 
 spec :: Spec
 spec = describe "Helper stuff" $ do
   forestFromParentList
+  countingT
   
 forestFromParentList :: Spec
 forestFromParentList = describe "Read Forest from parent list" $ do
@@ -21,3 +25,11 @@ forestFromParentList = describe "Read Forest from parent list" $ do
         [ Node 17 [ Node 34 [], Node 51 []]
         , Node 42 [ Node 84 [ Node 168 [] ]]
         ]
+
+countingT :: Spec
+countingT = describe "The CountingT 'monad transformer'" $ do
+  let nextTimes n = replicateM n next
+  describe "Counting from arbitrary Ints" $ do
+    prop "Grab the following Ints" $ \(start, len) -> do
+      let results = runCountingT (nextTimes len) start
+      runIdentity results `shouldBe` take len [start..]

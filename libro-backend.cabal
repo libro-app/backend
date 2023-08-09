@@ -31,6 +31,7 @@ library
                     , data-default
                     , directory
                     , filepath
+                    , mtl
                     , process
                     , temporary
                     , text
@@ -49,7 +50,9 @@ test-suite libro-backend-test
   default-extensions: OverloadedStrings
   type:               exitcode-stdio-1.0
   hs-source-dirs:     test
-  other-modules:      LiBro.ConfigSpec
+  other-modules:      LiBro.TestUtil
+                    , LiBro.TestUtilSpec
+                    , LiBro.ConfigSpec
                     , LiBro.DataSpec
                     , LiBro.Data.StorageSpec
                     , LiBro.UtilSpec
@@ -69,6 +72,7 @@ test-suite libro-backend-test
                     , silently
                     , temporary
                     , text
+                    , transformers
                     , vector
                     , xlsx
   build-tool-depends: hspec-discover:hspec-discover
