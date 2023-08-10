@@ -1,5 +1,8 @@
 # LiBro backend
 
+[![Build and test](https://github.com/libro-app/backend/actions/workflows/test.yml/badge.svg)](https://github.com/libro-app/backend/actions/workflows/test.yml)
+[![Publish API docs](https://github.com/libro-app/backend/actions/workflows/haddock-pages.yml/badge.svg)](https://github.com/libro-app/backend/actions/workflows/haddock-pages.yml)
+
 ## Dependencies
 
 System dependencies:
