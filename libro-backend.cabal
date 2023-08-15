@@ -20,6 +20,7 @@ library
   exposed-modules:    LiBro.Config
                     , LiBro.Data
                     , LiBro.Data.Storage
+                    , LiBro.Data.SafeText
                     , LiBro.Util
   build-depends:      base >=4.14.0.0
                     , aeson
@@ -33,6 +34,8 @@ library
                     , filepath
                     , mtl
                     , process
+                    , QuickCheck
+                    , quickcheck-text
                     , temporary
                     , text
                     , vector
@@ -55,11 +58,13 @@ test-suite libro-backend-test
                     , LiBro.ConfigSpec
                     , LiBro.DataSpec
                     , LiBro.Data.StorageSpec
+                    , LiBro.Data.SafeTextSpec
                     , LiBro.UtilSpec
   main-is:            run-all-tests.hs
   build-depends:      base >=4.14.0.0
                     , hspec
                     , QuickCheck
+                    , quickcheck-text
                     , generic-arbitrary
                     , libro-backend
                     , bytestring
