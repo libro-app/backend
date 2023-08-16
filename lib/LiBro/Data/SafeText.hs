@@ -12,6 +12,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Text.Arbitrary
 import Data.String
+import Data.Aeson
 import Test.QuickCheck
 
 unsafeChars :: String
@@ -38,3 +39,12 @@ safePack = safePackText . T.pack
 
 instance Arbitrary SafeText where
   arbitrary = suchThatMap arbitrary safePackText
+
+instance ToJSON SafeText where
+  toJSON = toJSON . getText
+
+instance FromJSON SafeText where
+  parseJSON = withText "SafeText" $ \text ->
+    case safePackText text of
+      Just st -> return st
+      Nothing -> fail $ "Unsafe string: " ++ show text

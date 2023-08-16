@@ -8,6 +8,8 @@ import Data.Text.Arbitrary
 import LiBro.Data.SafeText
 import Data.String
 import qualified Data.Text as T
+import Data.ByteString.Lazy (ByteString)
+import Data.Aeson
 import Control.Monad
 import Control.Exception
 
@@ -18,6 +20,7 @@ spec = describe "SafeText wrapper" $
     isStringInstance
     safePacking
     arbitraryInstance
+    jsonInstances
 
 safetyChecks :: Spec
 safetyChecks = describe "Safety checks" $ do
@@ -70,3 +73,21 @@ arbitraryInstance = describe "Arbitrary instance (QuickCheck)" $ do
     forAll (arbitrary `suchThat` ((> 100) . length)) $ \sts -> do
       let everything = concat (map (T.unpack . getText) sts)
       forAll (elements "The answer is 42") (`elem` everything)
+
+jsonInstances :: Spec
+jsonInstances = describe "JSON instances" $ do
+
+  describe "Roundtrip FromJSON . ToJSON = id" $ do
+    prop "Correct SafeText" $
+      \st -> decode (encode (st :: SafeText)) `shouldBe` Just st
+
+  describe "SafeText accepts valid string input only" $ do
+    prop "Parsing gives Nothing" $
+      \s -> not (isSafeString s) ==>
+        (decode (encode s) :: Maybe SafeText) `shouldBe` Nothing
+
+  describe "JSON roundtrip is equivalent to calling safePack" $
+    prop "They're the same picture" $
+      \s -> classify (isSafeString s) "safe" $
+            classify (not $ isSafeString s) "unsafe" $
+            decode (encode s) `shouldBe` safePack s

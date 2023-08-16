@@ -67,6 +67,7 @@ test-suite libro-backend-test
                     , quickcheck-text
                     , generic-arbitrary
                     , libro-backend
+                    , aeson
                     , bytestring
                     , cassava
                     , containers
