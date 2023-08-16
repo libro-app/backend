@@ -13,6 +13,7 @@ import qualified Data.Text as T
 import Data.Text.Arbitrary
 import Data.String
 import Data.Aeson
+import Data.Csv
 import Test.QuickCheck
 
 unsafeChars :: String
@@ -45,6 +46,16 @@ instance ToJSON SafeText where
 
 instance FromJSON SafeText where
   parseJSON = withText "SafeText" $ \text ->
+    case safePackText text of
+      Just st -> return st
+      Nothing -> fail $ "Unsafe string: " ++ show text
+
+instance ToField SafeText where
+  toField = toField . getText
+
+instance FromField SafeText where
+  parseField fbs = do
+    text <- parseField fbs
     case safePackText text of
       Just st -> return st
       Nothing -> fail $ "Unsafe string: " ++ show text

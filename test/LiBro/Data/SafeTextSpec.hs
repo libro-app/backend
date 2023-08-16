@@ -7,9 +7,15 @@ import Data.Text.Arbitrary
 
 import LiBro.Data.SafeText
 import Data.String
+import qualified Data.Vector as V
+import Data.Either
+import Data.Either.Extra
+import Data.Vector (Vector)
 import qualified Data.Text as T
 import Data.ByteString.Lazy (ByteString)
-import Data.Aeson
+import qualified Data.Aeson as J
+import qualified Data.Csv as C
+import Data.Csv (Only(..), HasHeader(..))
 import Control.Monad
 import Control.Exception
 
@@ -21,6 +27,7 @@ spec = describe "SafeText wrapper" $
     safePacking
     arbitraryInstance
     jsonInstances
+    csvInstances
 
 safetyChecks :: Spec
 safetyChecks = describe "Safety checks" $ do
@@ -79,15 +86,46 @@ jsonInstances = describe "JSON instances" $ do
 
   describe "Roundtrip FromJSON . ToJSON = id" $ do
     prop "Correct SafeText" $
-      \st -> decode (encode (st :: SafeText)) `shouldBe` Just st
+      \st -> J.decode (J.encode (st :: SafeText)) `shouldBe` Just st
 
   describe "SafeText accepts valid string input only" $ do
     prop "Parsing gives Nothing" $
       \s -> not (isSafeString s) ==>
-        (decode (encode s) :: Maybe SafeText) `shouldBe` Nothing
+        (J.decode (J.encode s) :: Maybe SafeText) `shouldBe` Nothing
 
   describe "JSON roundtrip is equivalent to calling safePack" $
     prop "They're the same picture" $
       \s -> classify (isSafeString s) "safe" $
             classify (not $ isSafeString s) "unsafe" $
-            decode (encode s) `shouldBe` safePack s
+            J.decode (J.encode s) `shouldBe` safePack s
+
+csvInstances :: Spec
+csvInstances = describe "CSV instances" $ do
+
+  describe "Roundtrip FromField . ToField = id" $ do
+    prop "Correct (non-empty) SafeText" $
+      \st -> not (T.null $ getText st) ==>
+        readCSV (writeCSV st) `shouldBe` Right (V.fromList [Only st])
+
+  describe "SafeText accepts valid string input only" $ do
+    prop "Parsing gives error message" $
+      \s -> not (isSafeString s) ==>
+        let (Left e) = readCSV (writeCSV' s)
+            expected = "Unsafe string: " ++ show s
+        in  e `shouldContain` expected
+
+  describe "CSV roundtrip is somehow equivalent to calling safePack" $
+    prop "They're the same picture" $
+      \s -> not (null s) ==>
+              classify (isSafeString s) "safe" $
+              classify (not $ isSafeString s) "unsafe" $
+              eitherToMaybe (readCSV (writeCSV' s))
+                `shouldBe` (V.fromList . return . Only <$> safePack s)
+
+  where -- explicit types to make tests more readable
+        writeCSV :: SafeText -> ByteString
+        writeCSV = C.encode . return . Only
+        writeCSV' :: String -> ByteString
+        writeCSV' = C.encode . return . Only
+        readCSV :: ByteString -> Either String (Vector (Only SafeText))
+        readCSV = C.decode NoHeader
