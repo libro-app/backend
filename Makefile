@@ -3,7 +3,7 @@
 all: build test doc stats
 
 build:
-	cabal build --enable-tests --enable-benchmarks all
+	cabal build --enable-tests all
 
 test:
 	cabal test --test-show-details=direct
