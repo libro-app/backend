@@ -1,7 +1,6 @@
 # LiBro backend
 
-[![Build and test](https://github.com/libro-app/backend/actions/workflows/test.yml/badge.svg)](https://github.com/libro-app/backend/actions/workflows/test.yml)
-[![Publish API docs](https://github.com/libro-app/backend/actions/workflows/haddock-pages.yml/badge.svg)](https://github.com/libro-app/backend/actions/workflows/haddock-pages.yml)
+[![build, test, docs](https://github.com/libro-app/backend/actions/workflows/haskell-ci.yml/badge.svg)](https://github.com/libro-app/backend/actions/workflows/haskell-ci.yml)
 
 ## Dependencies
 
