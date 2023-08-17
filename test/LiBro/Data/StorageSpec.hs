@@ -44,7 +44,7 @@ spec = describe "Data storage" $ do
   recordsToTasks
   excelExport
   excelImport
-  excelNonPrintable
+  excelUnsafe
   personStorage
   taskStorage
   dataStorage
@@ -223,14 +223,15 @@ excelImport = describe "Excel import" $ do
       taskRecords `shouldBe`
         Right (V.fromList [TaskRecord 42 Nothing "foo" "bar" (IdList [17, 37])])
 
-excelNonPrintable :: Spec
-excelNonPrintable = describe "XLSX storage of arbitrary strings" $ do
+excelUnsafe :: Spec
+excelUnsafe = describe "XLSX storage of unsafe strings" $ do
 
-  context "With arbitrary text data structure" $
+  context "With unsafe text data structure" $
+    modifyMaxDiscardRatio (const 4217) $
     modifyMaxSuccess (const 5) $
       -- TODO un-expectFailure
       prop "Load . store = id" $ expectFailure $ \s ->
-        not (null s) ==> ioProperty $ do
+        not (null s) && not (isSafeString s) ==> ioProperty $ do
           withSystemTempDirectory "data" $ \tdir -> do
             let inCsv = encode [Only (s :: String)]
                 fp    = tdir </> "data.xlsx"
@@ -238,8 +239,6 @@ excelNonPrintable = describe "XLSX storage of arbitrary strings" $ do
             outData <- decode NoHeader <$> loadCSVfromXLSX fp
             let (Right [Only s']) = V.toList <$> outData
             return $
-              classify (isSafeString s') "safe" $
-              classify (not $ isSafeString s') "unsafe" $
               s' `shouldBe` s
 
 personStorage :: Spec
