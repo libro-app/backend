@@ -1,10 +1,17 @@
+-- |  Thin wrapper around 'Text', but without unsafe characters.
 module LiBro.Data.SafeText
-  ( unsafeChars
+  (
+  -- * Definition of /unsafe/
+  unsafeChars
+  -- * A thin 'Text' wrapper with smart data constructor
+  -- $smartDC
   , SafeText
   , getText
+  -- * Safety checks
   , isSafeChar
   , isSafeText
   , isSafeString
+  -- * Explicit value creation
   , safePackText
   , safePack
   ) where
@@ -17,26 +24,64 @@ import Data.Aeson
 import Data.Csv
 import Test.QuickCheck
 
-unsafeChars :: String
+-- |  A list of all characters considered /unsafe/ in our setting:
+--    @'\\NUL'@ and @'\\r'@.
+unsafeChars :: [Char]
 unsafeChars = "\NUL\r"
 
-newtype SafeText = SafeText { getText :: Text } deriving Eq
+{- $smartDC
+'SafeText' is only a thin @newtype@ wrapper around 'Text'. To ensure
+that its characters are /safe/, the standard data constructor is hidden
+from exports.
+
+== How to create 'SafeText' values?
+
+* Use `safePack` or 'safePackText' to create @'Just' 'SafeText'@ values
+  (or 'Nothing' if the given text or string was /unsafe/).
+* Use 'SafeText'\'s 'Read' instance together with 'read' or
+  'Text.Read.readMaybe'.
+* Use 'SafeText'\'s 'IsString' instance together with the
+  [@OverloadedStrings@](https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/overloaded_strings.html)
+  extension to create 'SafeText' directly from string literals:
+  @"Hello, world" :: SafeText@
+
+== Can 'SafeText' be used exactly like 'Text'?
+
+No. There are very useful instances: 'Arbitrary' for property tests with
+"Test.QuickCheck", 'ToJSON' and 'FromJSON' for JSON stuff with "Data.Aeson"
+and 'ToField' and 'FromField' for CSV stuff with "Data.Csv" (Cassava).
+But it seems to be a bit overkill to export everything "Data.Text" has
+to offer. Just access the underlying 'Text' via 'getText' and go from there.
+-}
+
+-- |  A simple @newtype@ wrapper around 'Text', but ensures the absence
+--    of /unsafe/ characters.
+newtype SafeText = SafeText
+  { getText :: Text -- ^ Extracts the 'Text' value from 'SafeText'.
+  } deriving Eq
 
 instance Show SafeText where
   show = show . getText
 
+-- |  Checks if a 'Char' is considered /safe/.
 isSafeChar :: Char -> Bool
 isSafeChar = (`notElem` unsafeChars)
 
+-- |  Checks if a 'Text' is considered /safe/.
 isSafeText :: Text -> Bool
 isSafeText = T.all isSafeChar
 
+-- |  Checks if a 'GHC.Base.String' is considered /safe/.
 isSafeString :: String -> Bool
 isSafeString = all isSafeChar
 
+-- |  Creates a 'SafeText' value or 'Nothing'
+--    if the given 'Text' was /unsafe/.
 safePackText :: Text -> Maybe SafeText
 safePackText = fmap SafeText . guarded isSafeText
 
+-- |  Creates a 'SafeText' value or 'Nothing'
+--    if the given 'GHC.Base.String' was /unsafe/.
 safePack :: String -> Maybe SafeText
 safePack = safePackText . T.pack
 
