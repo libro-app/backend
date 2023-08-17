@@ -1,8 +1,7 @@
 -- |  Little Brother data representation
 module LiBro.Data where
 
-import Data.Text (Text)
-import qualified Data.Text as T
+import LiBro.Data.SafeText
 import Data.Tree
 import Data.Function
 import Data.Aeson
@@ -12,8 +11,8 @@ import Data.Csv
 -- |  A person that is assigned to 'Task's.
 data Person = Person
   { pid   :: Int
-  , name  :: Text
-  , email :: Text
+  , name  :: SafeText
+  , email :: SafeText
   } deriving (Show, Generic)
 
 instance Eq Person where (==) = (==) `on` pid
@@ -27,8 +26,8 @@ instance ToNamedRecord Person
 -- |  Internal task representation.
 data Task = Task
   { tid         :: Int
-  , title       :: Text
-  , description :: Text
+  , title       :: SafeText
+  , description :: SafeText
   , assignees   :: [Person]
   } deriving (Show, Generic)
 

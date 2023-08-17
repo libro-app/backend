@@ -196,8 +196,10 @@ excelExport = describe "Excel export" $ do
           (CellText xTitle) <- sheet ^? ixCell (2,3) . cellValue . _Just
           (CellText xDescr) <- sheet ^? ixCell (2,4) . cellValue . _Just
           (CellText xAss)   <- sheet ^? ixCell (2,5) . cellValue . _Just
-          let record = TaskRecord (floor xTid) Nothing
-                        xTitle xDescr (read $ T.unpack xAss)
+          let sxTitle = fromJust $ safePackText xTitle
+              sxDescr = fromJust $ safePackText xDescr
+              record  = TaskRecord (floor xTid) Nothing
+                        sxTitle sxDescr (read $ T.unpack xAss)
           return (columns, [record])
     it "Sheet parsed correctly" $
       parsedSheet `shouldSatisfy` isJust
