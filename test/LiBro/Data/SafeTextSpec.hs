@@ -21,7 +21,7 @@ import Control.Exception
 
 spec :: Spec
 spec = describe "SafeText wrapper" $
-  modifyMaxDiscardRatio (const 42) $ do -- Neccessary, but tests are fast
+  modifyMaxDiscardRatio (const 1000) $ do -- Neccessary, but tests are fast
     safetyChecks
     isStringInstance
     safePacking
@@ -34,6 +34,12 @@ safetyChecks = describe "Safety checks" $ do
 
   it "Correct unsafe characters" $
     unsafeChars `shouldBe` "\NUL\r"
+
+  prop "Check safe characters" $
+    \c -> safe [c] ==> isSafeChar c
+
+  prop "Check unsafe characters" $
+    \c -> unsafe [c] ==> not (isSafeChar c)
 
   prop "Check safe strings" $
     \s -> safe s ==> isSafeString s

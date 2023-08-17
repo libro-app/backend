@@ -2,6 +2,7 @@ module LiBro.Data.SafeText
   ( unsafeChars
   , SafeText
   , getText
+  , isSafeChar
   , isSafeText
   , isSafeString
   , safePackText
@@ -21,11 +22,14 @@ unsafeChars = "\NUL\r"
 
 newtype SafeText = SafeText { getText :: Text } deriving (Eq, Show)
 
+isSafeChar :: Char -> Bool
+isSafeChar = (`notElem` unsafeChars)
+
 isSafeText :: Text -> Bool
-isSafeText = isSafeString . T.unpack
+isSafeText = T.all isSafeChar
 
 isSafeString :: String -> Bool
-isSafeString = all (`notElem` unsafeChars)
+isSafeString = all isSafeChar
 
 safePackText :: Text -> Maybe SafeText
 safePackText = fmap SafeText . guarded isSafeText
