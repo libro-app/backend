@@ -20,7 +20,10 @@ import Test.QuickCheck
 unsafeChars :: String
 unsafeChars = "\NUL\r"
 
-newtype SafeText = SafeText { getText :: Text } deriving (Eq, Show)
+newtype SafeText = SafeText { getText :: Text } deriving Eq
+
+instance Show SafeText where
+  show = show . getText
 
 isSafeChar :: Char -> Bool
 isSafeChar = (`notElem` unsafeChars)

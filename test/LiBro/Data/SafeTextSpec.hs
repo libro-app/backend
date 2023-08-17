@@ -23,6 +23,7 @@ spec :: Spec
 spec = describe "SafeText wrapper" $
   modifyMaxDiscardRatio (const 1000) $ do -- Neccessary, but tests are fast
     safetyChecks
+    showInstance
     isStringInstance
     safePacking
     arbitraryInstance
@@ -54,6 +55,12 @@ safetyChecks = describe "Safety checks" $ do
 
   where safe    = all (`notElem` unsafeChars)
         unsafe  = any (`elem` unsafeChars)
+
+showInstance :: Spec
+showInstance = describe "Show instance" $ do
+  prop "Same result as Text on safe input" $ \t -> isSafeText t ==>
+      let (Just st) = safePackText t
+      in  show st `shouldBe` show t
 
 isStringInstance :: Spec
 isStringInstance = describe "IsString instance (OverloadedStrings)" $ do
