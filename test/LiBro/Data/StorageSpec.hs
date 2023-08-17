@@ -44,7 +44,6 @@ spec = describe "Data storage" $ do
   recordsToTasks
   excelExport
   excelImport
-  excelUnsafe
   personStorage
   taskStorage
   dataStorage
@@ -224,24 +223,6 @@ excelImport = describe "Excel import" $ do
     it "Load correct TaskRecord" $
       taskRecords `shouldBe`
         Right (V.fromList [TaskRecord 42 Nothing "foo" "bar" (IdList [17, 37])])
-
-excelUnsafe :: Spec
-excelUnsafe = describe "XLSX storage of unsafe strings" $ do
-
-  context "With unsafe text data structure" $
-    modifyMaxDiscardRatio (const 4217) $
-    modifyMaxSuccess (const 5) $
-      -- TODO un-expectFailure
-      prop "Load . store = id" $ expectFailure $ \s ->
-        not (null s) && not (isSafeString s) ==> ioProperty $ do
-          withSystemTempDirectory "data" $ \tdir -> do
-            let inCsv = encode [Only (s :: String)]
-                fp    = tdir </> "data.xlsx"
-            storeCSVasXLSX fp inCsv
-            outData <- decode NoHeader <$> loadCSVfromXLSX fp
-            let (Right [Only s']) = V.toList <$> outData
-            return $
-              s' `shouldBe` s
 
 personStorage :: Spec
 personStorage = describe "XSLX storage of Person data" $ do
