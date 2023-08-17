@@ -21,11 +21,6 @@ unsafeChars = "\NUL\r"
 
 newtype SafeText = SafeText { getText :: Text } deriving (Eq, Show)
 
-instance IsString SafeText where
-  fromString s
-    | isSafeString s  = SafeText (T.pack s)
-    | otherwise       = error ("Not a safe string: " ++ show s)
-
 isSafeText :: Text -> Bool
 isSafeText = isSafeString . T.unpack
 
@@ -37,6 +32,11 @@ safePackText = fmap SafeText . guarded isSafeText
 
 safePack :: String -> Maybe SafeText
 safePack = safePackText . T.pack
+
+instance IsString SafeText where
+  fromString s
+    | isSafeString s  = SafeText (T.pack s)
+    | otherwise       = error ("Not a safe string: " ++ show s)
 
 instance Arbitrary SafeText where
   arbitrary = suchThatMap arbitrary safePack
