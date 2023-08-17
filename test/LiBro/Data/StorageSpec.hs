@@ -8,6 +8,7 @@ import LiBro.TestUtil
 
 import LiBro.Config
 import LiBro.Data
+import LiBro.Data.SafeText
 import LiBro.Data.Storage
 import Data.Char
 import qualified Data.ByteString.Lazy as BS
@@ -222,33 +223,24 @@ excelImport = describe "Excel import" $ do
       taskRecords `shouldBe`
         Right (V.fromList [TaskRecord 42 Nothing "foo" "bar" (IdList [17, 37])])
 
-newtype AllCharsT = ACT {getACT :: Text} deriving Eq
-instance Show AllCharsT where show = show . getACT
-instance ToField AllCharsT where toField = toField . getACT
-instance FromField AllCharsT where parseField = fmap ACT . parseField
-instance Arbitrary AllCharsT where arbitrary = ACT . T.pack <$> arbitrary
-
 excelNonPrintable :: Spec
 excelNonPrintable = describe "XLSX storage of arbitrary strings" $ do
 
   context "With arbitrary text data structure" $
     modifyMaxSuccess (const 5) $
-      prop "Load . store = id" $ expectFailure $ \d -> ioProperty $ do -- TODO
-        withSystemTempDirectory "data" $ \tdir -> do
-          let input = d :: [(AllCharsT, AllCharsT, AllCharsT)]
-              inCsv = encode input
-              fp    = tdir </> "data.xlsx"
-          storeCSVasXLSX fp inCsv
-          outCsv <- loadCSVfromXLSX fp
-          let output = fromRight [] $ V.toList <$> decode NoHeader outCsv
-          return $
-            classify (printableD output) "printable" $
-              classify (not $ printableD output) "not printable" $
-                output `shouldBe` input
-
-  where printableD = all printable3
-        printable3 (a, b, c) = all printableT [a,b,c]
-        printableT = all isPrint . T.unpack . getACT
+      -- TODO un-expectFailure
+      prop "Load . store = id" $ expectFailure $ \s ->
+        not (null s) ==> ioProperty $ do
+          withSystemTempDirectory "data" $ \tdir -> do
+            let inCsv = encode [Only (s :: String)]
+                fp    = tdir </> "data.xlsx"
+            storeCSVasXLSX fp inCsv
+            outData <- decode NoHeader <$> loadCSVfromXLSX fp
+            let (Right [Only s']) = V.toList <$> outData
+            return $
+              classify (isSafeString s') "safe" $
+              classify (not $ isSafeString s') "unsafe" $
+              s' `shouldBe` s
 
 personStorage :: Spec
 personStorage = describe "XSLX storage of Person data" $ do
