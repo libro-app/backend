@@ -1,18 +1,14 @@
 module LiBro.TestUtil where
 
 import LiBro.Data
+import LiBro.Data.SafeText
 import LiBro.Util
-import Data.Text (Text)
-import qualified Data.Text as T
 import Data.List
 import Data.Tree
 import Data.Bifunctor
 import Test.QuickCheck
 import Control.Monad
 import Control.Monad.Trans.Class
-
-instance Arbitrary Text where
-  arbitrary = T.pack . getPrintableString <$> arbitrary
 
 -- Person generator with a given person ID.
 genPerson :: Int -> Gen Person
