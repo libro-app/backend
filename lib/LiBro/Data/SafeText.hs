@@ -1,6 +1,7 @@
 module LiBro.Data.SafeText
   ( unsafeChars
-  , SafeText(getText)
+  , SafeText
+  , getText
   , isSafeText
   , isSafeString
   , safePackText
