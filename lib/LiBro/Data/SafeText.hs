@@ -10,7 +10,6 @@ module LiBro.Data.SafeText
 import LiBro.Util
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Text.Arbitrary
 import Data.String
 import Data.Aeson
 import Data.Csv
@@ -39,7 +38,7 @@ safePack :: String -> Maybe SafeText
 safePack = safePackText . T.pack
 
 instance Arbitrary SafeText where
-  arbitrary = suchThatMap arbitrary safePackText
+  arbitrary = suchThatMap arbitrary safePack
 
 instance ToJSON SafeText where
   toJSON = toJSON . getText
