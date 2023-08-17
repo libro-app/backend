@@ -4,11 +4,12 @@ module LiBro.Util where
 
 import Data.Tuple
 import Data.List as L
-import Data.Map as M
+import qualified Data.Map as M
 import Data.Tree
 import Data.Maybe
 import Data.Bifunctor
 import Control.Monad.State
+import Control.Applicative
 
 -- |  A 'Tree'/'Forest' representation as a linear list.
 --    All entries point to their parent.
@@ -39,3 +40,7 @@ next = do
 -- |  Evaluate the given action with counting from the given initial value.
 runCountingT :: Monad m => CountingT m a -> Int -> m a
 runCountingT = evalStateT
+
+-- |  Create an 'Alternative' value based on a predicate.
+guarded :: Alternative f => (a -> Bool) -> a -> f a
+guarded p x = if p x then pure x else empty

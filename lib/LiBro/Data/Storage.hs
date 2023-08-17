@@ -3,8 +3,8 @@ module LiBro.Data.Storage where
 
 import LiBro.Config
 import LiBro.Data
+import LiBro.Data.SafeText
 import LiBro.Util
-import Data.Text (Text)
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as BS
 import Data.Function
@@ -50,8 +50,8 @@ instance ToField IdList where
 data TaskRecord = TaskRecord
   { trid          :: Int
   , parentTid     :: Maybe Int
-  , tTitle        :: Text
-  , tDescription  :: Text
+  , tTitle        :: SafeText
+  , tDescription  :: SafeText
   , tAssignees    :: IdList
   } deriving (Show, Generic)
 

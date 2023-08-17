@@ -8,6 +8,7 @@ import LiBro.TestUtil
 
 import LiBro.Config
 import LiBro.Data
+import LiBro.Data.SafeText
 import LiBro.Data.Storage
 import Data.Char
 import qualified Data.ByteString.Lazy as BS
@@ -43,7 +44,6 @@ spec = describe "Data storage" $ do
   recordsToTasks
   excelExport
   excelImport
-  excelNonPrintable
   personStorage
   taskStorage
   dataStorage
@@ -195,8 +195,10 @@ excelExport = describe "Excel export" $ do
           (CellText xTitle) <- sheet ^? ixCell (2,3) . cellValue . _Just
           (CellText xDescr) <- sheet ^? ixCell (2,4) . cellValue . _Just
           (CellText xAss)   <- sheet ^? ixCell (2,5) . cellValue . _Just
-          let record = TaskRecord (floor xTid) Nothing
-                        xTitle xDescr (read $ T.unpack xAss)
+          let sxTitle = fromJust $ safePackText xTitle
+              sxDescr = fromJust $ safePackText xDescr
+              record  = TaskRecord (floor xTid) Nothing
+                        sxTitle sxDescr (read $ T.unpack xAss)
           return (columns, [record])
     it "Sheet parsed correctly" $
       parsedSheet `shouldSatisfy` isJust
@@ -221,34 +223,6 @@ excelImport = describe "Excel import" $ do
     it "Load correct TaskRecord" $
       taskRecords `shouldBe`
         Right (V.fromList [TaskRecord 42 Nothing "foo" "bar" (IdList [17, 37])])
-
-newtype AllCharsT = ACT {getACT :: Text} deriving Eq
-instance Show AllCharsT where show = show . getACT
-instance ToField AllCharsT where toField = toField . getACT
-instance FromField AllCharsT where parseField = fmap ACT . parseField
-instance Arbitrary AllCharsT where arbitrary = ACT . T.pack <$> arbitrary
-
-excelNonPrintable :: Spec
-excelNonPrintable = describe "XLSX storage of arbitrary strings" $ do
-
-  context "With arbitrary text data structure" $
-    modifyMaxSuccess (const 5) $
-      prop "Load . store = id" $ \d -> ioProperty $ do
-        withSystemTempDirectory "data" $ \tdir -> do
-          let input = d :: [(AllCharsT, AllCharsT, AllCharsT)]
-              inCsv = encode input
-              fp    = tdir </> "data.xlsx"
-          storeCSVasXLSX fp inCsv
-          outCsv <- loadCSVfromXLSX fp
-          let output = fromRight [] $ V.toList <$> decode NoHeader outCsv
-          return $
-            classify (printableD output) "printable" $
-              classify (not $ printableD output) "not printable" $
-                output `shouldBe` input
-
-  where printableD = all printable3
-        printable3 (a, b, c) = all printableT [a,b,c]
-        printableT = all isPrint . T.unpack . getACT
 
 personStorage :: Spec
 personStorage = describe "XSLX storage of Person data" $ do
