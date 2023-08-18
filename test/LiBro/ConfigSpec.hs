@@ -64,8 +64,8 @@ parsing = describe "Configuration parsing" $ do
       parseConfig "42" `shouldSatisfy` isLeft
 
   context "With arbitrary configuration" $
-    prop "parseConfig . writeConfig = Right" $
-      \c -> parseConfig (writeConfig c) `shouldBe` Right c
+    prop "parseConfig . writeConfig = Right" $ \c ->
+      parseConfig (writeConfig c) `shouldBe` Right c
 
 reading :: Spec
 reading = describe "Reading configuration from file" $ do

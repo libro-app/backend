@@ -44,17 +44,17 @@ guarding = describe "Guarded Alternative value creation" $ do
       guarded (== 42) 17 `shouldBe` Nothing
     it "Guard a 42 for 42-ness" $
       guarded (== 42) 42 `shouldBe` Just 42
-    prop "Guard even: Even" $
-      \i -> even (i :: Int) ==>
-        guarded even i `shouldBe` Just i
-    prop "Guard even: Odd" $
-      \i -> odd (i :: Int) ==>
-        guarded even i `shouldBe` Nothing
+    prop "Guard even: Even" $ \i ->
+      even (i :: Int) ==>
+      guarded even i `shouldBe` Just i
+    prop "Guard even: Odd" $ \i ->
+      odd (i :: Int) ==>
+      guarded even i `shouldBe` Nothing
 
   context "Alternative: List" $ do
-    prop "Guard even: Even" $
-      \i -> even (i :: Int) ==>
-        guarded even i `shouldBe` [i]
-    prop "Guard even: Odd" $
-      \i -> odd (i :: Int) ==>
-        guarded even i `shouldBe` []
+    prop "Guard even: Even" $ \i ->
+      even (i :: Int) ==>
+      guarded even i `shouldBe` [i]
+    prop "Guard even: Odd" $ \i ->
+      odd (i :: Int) ==>
+      guarded even i `shouldBe` []
