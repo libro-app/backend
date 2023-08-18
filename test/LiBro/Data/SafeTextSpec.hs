@@ -7,9 +7,9 @@ import Data.Text.Arbitrary
 
 import LiBro.Data.SafeText
 import Data.String
-import qualified Data.Vector as V
 import Data.Either
 import Data.Either.Extra
+import qualified Data.Vector as V
 import Data.Vector (Vector)
 import qualified Data.Text as T
 import Data.ByteString.Lazy (ByteString)
@@ -23,9 +23,9 @@ spec :: Spec
 spec = describe "SafeText wrapper" $
   modifyMaxDiscardRatio (const 1000) $ do -- Neccessary, but tests are fast
     safetyChecks
+    safePacking
     showInstance
     isStringInstance
-    safePacking
     arbitraryInstance
     jsonInstances
     csvInstances
@@ -56,6 +56,18 @@ safetyChecks = describe "Safety checks" $ do
   where safe    = all (`notElem` unsafeChars)
         unsafe  = any (`elem` unsafeChars)
 
+safePacking :: Spec
+safePacking = describe "Safe packing" $ do
+
+  prop "Pack safe Text" $
+    \t -> isSafeText t ==> getText <$> safePackText t `shouldBe`  Just t
+
+  prop "Pack unsafe Text" $
+    \t -> not (isSafeText t) ==> safePackText t `shouldBe` Nothing
+
+  prop "Check String input" $
+    \s -> safePack s `shouldBe` safePackText (T.pack s)
+
 showInstance :: Spec
 showInstance = describe "Show instance" $ do
   prop "Same result as Text on safe input" $ \t -> isSafeText t ==>
@@ -73,18 +85,6 @@ isStringInstance = describe "IsString instance (OverloadedStrings)" $ do
 
   prop "No error without unsafe characters" $
     \s -> isSafeString s ==> getText (fromString s) `shouldBe` T.pack s
-
-safePacking :: Spec
-safePacking = describe "Safe packing" $ do
-
-  prop "Pack safe Text" $
-    \t -> isSafeText t ==> getText <$> safePackText t `shouldBe`  Just t
-
-  prop "Pack unsafe Text" $
-    \t -> not (isSafeText t) ==> safePackText t `shouldBe` Nothing
-
-  prop "Check String input" $
-    \s -> safePack s `shouldBe` safePackText (T.pack s)
 
 arbitraryInstance :: Spec
 arbitraryInstance = describe "Arbitrary instance (QuickCheck)" $ do
