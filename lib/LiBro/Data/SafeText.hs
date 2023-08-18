@@ -14,12 +14,15 @@ module LiBro.Data.SafeText
   -- * Explicit value creation
   , safePackText
   , safePack
+  -- * Other useful stuff
+  , safeTextParser
   ) where
 
 import LiBro.Util
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.String
+import Data.Maybe
 import Data.Aeson
 import Data.Csv
 import Test.QuickCheck
@@ -62,6 +65,17 @@ newtype SafeText = SafeText
 
 instance Show SafeText where
   show = show . getText
+
+-- |  A simple 'ReadS' parser for 'SafeText', useful for 'Read' instances.
+safeTextParser :: ReadS SafeText
+safeTextParser input
+  | null unsafe = [(safeText, "")]
+  | otherwise   = []
+  where (safe, unsafe)  = span isSafeChar input
+        (Just safeText) = safePack safe
+
+instance Read SafeText where
+  readsPrec _ = safeTextParser
 
 -- |  Checks if a 'Char' is considered /safe/.
 isSafeChar :: Char -> Bool

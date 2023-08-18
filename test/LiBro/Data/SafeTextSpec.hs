@@ -7,6 +7,7 @@ import Data.Text.Arbitrary
 
 import LiBro.Data.SafeText
 import Data.String
+import Data.Maybe
 import Data.Either
 import Data.Either.Extra
 import qualified Data.Vector as V
@@ -16,6 +17,7 @@ import Data.ByteString.Lazy (ByteString)
 import qualified Data.Aeson as J
 import qualified Data.Csv as C
 import Data.Csv (Only(..), HasHeader(..))
+import Text.Read
 import Control.Monad
 import Control.Exception
 
@@ -25,6 +27,7 @@ spec = describe "SafeText wrapper" $
     safetyChecks
     safePacking
     showInstance
+    readInstance
     isStringInstance
     arbitraryInstance
     jsonInstances
@@ -74,6 +77,51 @@ showInstance = describe "Show instance" $ do
     isSafeText t ==>
     let (Just st) = safePackText t
     in  show st `shouldBe` show t
+
+readInstance :: Spec
+readInstance = describe "Read instance" $ do
+
+  describe "Manual parsing with ReadS" $ do
+
+    context "Simple cases" $ do
+      it "Empty input -> empty output" $
+        safeTextParser "" `shouldBe` [("","")]
+      it "Safe input -> complete output" $
+        safeTextParser "foo bar\nbaz" `shouldBe` [("foo bar\nbaz","")]
+      it "Unsafe input -> no output" $
+        safeTextParser "foo\rbar\nbaz" `shouldBe` []
+
+    context "General case" $ do
+      prop "Separate safe chars from unsafe chars" $ \s ->
+        classify (isSafeString s) "safe" $
+        classify (not $ isSafeString s) "unsafe" $
+        safeTextParser s
+          `shouldBe` maybe [] (\st -> [(st,"")]) (safePack s)
+
+  describe "Getting Maybe results with readMaybe" $ do
+
+    context "Simple cases" $ do
+      it "Empty input -> empty output" $
+        (readMaybe "" :: Maybe SafeText) `shouldBe` Just ""
+      it "Safe input -> Just" $
+        (readMaybe "foo bar\nbaz" :: Maybe SafeText)
+          `shouldBe` Just "foo bar\nbaz"
+      it "Unsafe input -> Nothing" $
+        (readMaybe "foo\rbar\nbaz" :: Maybe SafeText) `shouldBe` Nothing
+
+    context "General case" $ do
+      prop "Only give safe Just results, otherwise Nothing" $ \s ->
+        classify (isSafeString s) "safe" $
+        classify (not $ isSafeString s) "unsafe" $
+        readMaybe s `shouldBe` safePack s
+
+  describe "Using read" $ do
+    prop "Just create SafeText from safe strings" $ \s ->
+      isSafeString s ==>
+      (read s :: SafeText) `shouldBe` fromJust (safePack s)
+    prop "Throw errors at unsafe strings" $ \s ->
+      not (isSafeString s) ==>
+      evaluate (read s :: SafeText) `shouldThrow` anyErrorCall
 
 isStringInstance :: Spec
 isStringInstance = describe "IsString instance (OverloadedStrings)" $ do
