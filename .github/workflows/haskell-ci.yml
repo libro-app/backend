@@ -75,6 +75,9 @@ jobs:
         with:
           path: haddock_html
 
+      - name: Simple code statistics
+        run: make stats
+
   deploy:
     needs: build_test_doc
     if: github.ref == 'refs/heads/main'
