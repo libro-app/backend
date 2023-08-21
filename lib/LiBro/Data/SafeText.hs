@@ -14,6 +14,7 @@ module LiBro.Data.SafeText
   -- * Explicit value creation
   , safePackText
   , safePack
+  , safeModify
   -- * Other useful stuff
   , safeTextParser
   ) where
@@ -53,8 +54,10 @@ from exports.
 No. There are very useful instances: 'Arbitrary' for property tests with
 "Test.QuickCheck", 'ToJSON' and 'FromJSON' for JSON stuff with "Data.Aeson"
 and 'ToField' and 'FromField' for CSV stuff with "Data.Csv" (Cassava).
-But it seems to be a bit overkill to export everything "Data.Text" has
-to offer. Just access the underlying 'Text' via 'getText' and go from there.
+
+Also, there's 'safeModify' that allows 'Text' modifying functions to be
+applied /inside/ a 'SafeText'. But it seems to be a bit overkill to export
+everything "Data.Text" has to offer.
 -}
 
 -- |  A simple @newtype@ wrapper around 'Text', but ensures the absence
@@ -98,6 +101,10 @@ safePackText = fmap SafeText . guarded isSafeText
 --    if the given 'GHC.Base.String' was /unsafe/.
 safePack :: String -> Maybe SafeText
 safePack = safePackText . T.pack
+
+-- |  Safe application of a function that modifies 'Text' values.
+safeModify :: (Text -> Text) -> SafeText -> Maybe SafeText
+safeModify m = safePackText . m . getText
 
 instance IsString SafeText where
   fromString s

@@ -26,6 +26,7 @@ spec = describe "SafeText wrapper" $
   modifyMaxDiscardRatio (const 1000) $ do -- Neccessary, but tests are fast
     safetyChecks
     safePacking
+    textModification
     showInstance
     readInstance
     isStringInstance
@@ -70,6 +71,51 @@ safePacking = describe "Safe packing" $ do
 
   prop "Check String input" $ \s ->
     safePack s `shouldBe` safePackText (T.pack s)
+
+textModification :: Spec
+textModification = describe "Inner modifications" $ do
+  
+  prop "Identity does nothing" $ \st ->
+    safeModify id st `shouldBe` Just st
+
+  describe "Simple non-trivial example" $
+    let answerTo42    = T.unwords . map a242 . T.words
+        a242 "answer" = "42"
+        a242 text     = text
+    in  it "Replace answer word by 42" $
+          safeModify answerTo42 "foo answer bar"
+            `shouldBe` Just "foo 42 bar"
+
+  describe "Replacing with something safe" $
+    prop "Always retrieve the safe text" $ \(t, st) ->
+      isSafeText t ==>
+      getText <$> safeModify (const t) st `shouldBe` Just t
+
+  describe "Replacing with something unsafe" $
+    prop "Always get Nothing" $ \(t, st) ->
+      not (isSafeText t) ==>
+      safeModify (const t) st `shouldBe` Nothing
+
+  describe "Appending something safe" $
+    prop "Appending 'Just' appends" $ \(t, st) ->
+      isSafeText t ==>
+      getText <$> safeModify (`T.append` t) st
+        `shouldBe` Just (getText st `T.append` t)
+
+  describe "Appending something unsafe" $
+    prop "Always get Nothing" $ \(t, st) ->
+      not (isSafeText t) ==>
+      safeModify (`T.append` t) st `shouldBe` Nothing
+
+  context "Modification diagrams commute" $ do
+    let modifications = [ (T.reverse, "reverse")
+                        , (T.toTitle, "toTitle")
+                        , (T.center 42 '%', "center to width 42 with '%'")
+                        ]
+    forM_ modifications $ \(m, name) ->
+      prop ("Modification: " ++ name ++ ")") $ \st ->
+        getText <$> safeModify m st
+          `shouldBe` Just (m $ getText st)
 
 showInstance :: Spec
 showInstance = describe "Show instance" $ do
