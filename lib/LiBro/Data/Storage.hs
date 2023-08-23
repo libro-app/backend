@@ -20,11 +20,6 @@ import System.FilePath
 import System.Directory
 import System.Process
 
--- |  Helper function to create a person 'Map' from 'Int' to 'Person'
---    from a given 'Person' list. Useful for 'Task' reading functions.
-personMap :: [Person] -> Map Int Person
-personMap = M.fromList . map ((,) =<< pid)
-
 -- |  A thin wrapper around lists of 'Int' with a simple
 --    (space-separated) 'String' representation.
 newtype IdList = IdList { ids :: [Int] } deriving (Eq, Generic)
@@ -77,9 +72,8 @@ tasksToTaskRecords = concatMap (storeTasks' Nothing)
           , tAssignees    = IdList (pid <$> assignees t)
           }
 
--- |  Load 'Task's from 'TaskRecord's. Needs an additional 'Map'
---    to find 'Person's for given person ids ('Int').
-taskRecordsToTasks :: Map Int Person -> [TaskRecord] -> Tasks
+-- |  Load 'Task's from 'TaskRecord's. Needs to lookup 'Person's.
+taskRecordsToTasks :: Persons -> [TaskRecord] -> Tasks
 taskRecordsToTasks persons trs =
   let tasks       = M.fromList $ map ((,) =<< trid) trs
       parentList  = map ((,) <$> trid <*> parentTid) trs
@@ -123,24 +117,24 @@ loadCSVfromXLSX fp = do
       ]
     BS.readFile csvFile
 
--- |  Store a list of 'Person's at the configured storage space
+-- |  Store 'Person's at the configured storage space
 --    via 'Config'.
-storePersons :: Config -> [Person] -> IO ()
+storePersons :: Config -> Persons -> IO ()
 storePersons conf persons = do
   let sconf = storage conf
       fp    = directory sconf </> personFile sconf
-      csv   = encodeDefaultOrderedByName persons
+      csv   = encodeDefaultOrderedByName (M.elems persons)
   storeCSVasXLSX fp csv
 
 -- |  Load a list of 'Person's from the configured storage space
 --    via 'Config'.
-loadPersons :: Config -> IO [Person]
+loadPersons :: Config -> IO Persons
 loadPersons conf = do
   let sconf = storage conf
       fp    = directory sconf </> personFile sconf
   csv <- loadCSVfromXLSX fp
   let (Right records) = decode HasHeader csv
-  return $ V.toList records
+  return $ personMap $ V.toList records
 
 -- |  Store 'Tasks' at the configured storage space via 'Config'.
 storeTasks :: Config -> Tasks -> IO ()
@@ -154,7 +148,7 @@ storeTasks conf tasks = do
 -- |  Load 'Tasks' from the configured storage space via 'Config'.
 --    Needs an additional 'Map' to find 'Person's for given person
 --    ids ('Int').
-loadTasks :: Config -> Map Int Person -> IO Tasks
+loadTasks :: Config -> Persons -> IO Tasks
 loadTasks conf persons = do
   let sconf = storage conf
       fp    = directory sconf </> tasksFile sconf
@@ -164,15 +158,15 @@ loadTasks conf persons = do
 
 -- |  Store a complete dataset at the 'Config'ured file system
 --    locations.
-storeData :: Config -> ([Person], Tasks) -> IO ()
-storeData conf (persons, tasks) = do
-  storePersons  conf persons
-  storeTasks    conf tasks
+storeData :: Config -> LiBroData -> IO ()
+storeData conf ld = do
+  storePersons  conf (persons ld)
+  storeTasks    conf (tasks ld)
 
 -- |  Load a complete dataset from the 'Config'ured file system
 --    locations.
-loadData :: Config -> IO ([Person], Tasks)
+loadData :: Config -> IO LiBroData
 loadData conf = do
   persons <- loadPersons  conf
-  tasks   <- loadTasks    conf (personMap persons)
-  return (persons, tasks)
+  tasks   <- loadTasks    conf persons
+  return $ LBS persons tasks

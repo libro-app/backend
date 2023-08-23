@@ -10,7 +10,6 @@ import LiBro.Config
 import LiBro.Data
 import LiBro.Data.SafeText
 import LiBro.Data.Storage
-import Data.Char
 import qualified Data.ByteString.Lazy as BS
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -19,7 +18,6 @@ import Data.Either
 import Data.Vector (Vector)
 import qualified Data.Vector as V
 import Data.Map ((!))
-import qualified Data.Map as M
 import Data.Tree
 import Data.Csv
 import Codec.Xlsx
@@ -28,16 +26,11 @@ import System.FilePath
 import System.IO.Temp
 import Control.Monad
 
--- Beware: Arbitrary Person has pid collisions
-instance Arbitrary Person where
-  arbitrary = genericArbitrary
-
 instance Arbitrary IdList where
   arbitrary = genericArbitrary
 
 spec :: Spec
 spec = describe "Data storage" $ do
-  personMapping
   idList
   taskCsv
   tasksToRecords
@@ -47,11 +40,6 @@ spec = describe "Data storage" $ do
   personStorage
   taskStorage
   dataStorage
-
-personMapping :: Spec
-personMapping = describe "Map creation for Persons" $ do
-  prop "Map from person IDs matches given persons" $ \persons ->
-    personMap persons `shouldBe` M.fromList (map ((,) =<< pid) persons)
 
 idList :: Spec
 idList = describe "IdList String representation" $ do
@@ -227,12 +215,13 @@ excelImport = describe "Excel import" $ do
 personStorage :: Spec
 personStorage = describe "XSLX storage of Person data" $ do
   modifyMaxSuccess (const 5) $
-    prop "Load . store = id" $ \persons -> ioProperty $ do
-      withSystemTempDirectory "person-storage" $ \tdir -> do
-        let config = def { storage = def { directory = tdir }}
-        storePersons config persons
-        loadedPersons <- loadPersons config
-        return $ loadedPersons === persons
+    prop "Load . store = id" $
+      forAll genPersons $ \persons -> ioProperty $ do
+        withSystemTempDirectory "person-storage" $ \tdir -> do
+          let config = def { storage = def { directory = tdir }}
+          storePersons config persons
+          loadedPersons <- loadPersons config
+          return $ loadedPersons === persons
 
 taskStorage :: Spec
 taskStorage = describe "XLSX storage of Task data" $ do
@@ -281,9 +270,9 @@ dataStorage = describe "Complete dataset" $ do
                     ]
                   ]
     let conf = def { storage = def { directory = "test/storage-files/data" }}
-    (loadedPersons, loadedTasks) <- runIO $ loadData conf
+    (LBS loadedPersons loadedTasks) <- runIO $ loadData conf
     it "Load correct persons" $
-      loadedPersons `shouldBe` persons
+      loadedPersons `shouldBe` personMap persons
     it "Load correct task forest" $
       loadedTasks `shouldBe` tForest
 

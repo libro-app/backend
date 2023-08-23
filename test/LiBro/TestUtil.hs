@@ -4,6 +4,7 @@ import LiBro.Data
 import LiBro.Data.SafeText
 import LiBro.Util
 import Data.List
+import qualified Data.Map as M
 import Data.Tree
 import Data.Bifunctor
 import Test.QuickCheck
@@ -17,16 +18,18 @@ genPerson pid = Person  <$> return pid
                         <*> arbitrary
 
 -- Unique person lists generator
-genPersons :: Gen [Person]
-genPersons = mapM genPerson =<< arbitrary `suchThat` unique
+genPersons :: Gen Persons
+genPersons = do
+  persons <- mapM genPerson =<< arbitrary `suchThat` unique
+  return $ personMap persons
   where unique = (==) <*> nub
 
 -- Task generator with task ID and _allowed_ persons
-genTask :: [Person] -> Int -> Gen Task
+genTask :: Persons -> Int -> Gen Task
 genTask ps tid = Task <$> return tid
                       <*> arbitrary
                       <*> arbitrary
-                      <*> sublistOf ps
+                      <*> sublistOf (M.elems ps)
 
 -- |  A QuickCheck 'Gen' variant that can count
 --    (helpful for unique IDs).
@@ -38,7 +41,7 @@ scaledListOf s g = do
   newSize <- lift $ chooseInt (0, s oldSize)
   replicateM newSize g
 
-countingGenTaskTree :: [Person] -> CountingGen (Tree Task)
+countingGenTaskTree :: Persons -> CountingGen (Tree Task)
 countingGenTaskTree ps = do
   tid       <- next
   task      <- lift $ genTask ps tid
@@ -46,18 +49,18 @@ countingGenTaskTree ps = do
   return $ Node task children
 
 -- |  Task tree generator with unique IDs and _allowed_ persons
-genTaskTree :: [Person] -> Gen (Tree Task)
+genTaskTree :: Persons -> Gen (Tree Task)
 genTaskTree ps = runCountingT (countingGenTaskTree ps) =<< arbitrary
 
 -- |  Task forest generator with unique IDs and _allowed_ persons
-genTaskForest :: [Person] -> Gen Tasks
+genTaskForest :: Persons -> Gen Tasks
 genTaskForest ps = runCountingT gtf =<< arbitrary
   where gtf = scaledListOf (`div` 2) $ countingGenTaskTree ps
 
 -- |  Generate a full data setting with non-empty persons
 --    with unique person ids and tasks with valid assignees
-genPersonsTasks :: Gen ([Person], Tasks)
+genPersonsTasks :: Gen LiBroData
 genPersonsTasks = do
   ps <- genPersons `suchThat` (not.null)
   ts <- genTaskForest ps
-  return (ps, ts)
+  return $ LBS ps ts

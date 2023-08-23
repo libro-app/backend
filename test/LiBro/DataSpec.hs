@@ -7,11 +7,13 @@ import Test.Hspec.QuickCheck
 import LiBro.TestUtil
 
 import LiBro.Data
+import qualified Data.Map as M
 import Data.Tree
 
 spec :: Spec
 spec = describe "Data handling" $ do
   assigneesOfTasks
+  personMapping
 
 assigneesOfTasks :: Spec
 assigneesOfTasks = describe "Assignees of tasks" $ do
@@ -38,15 +40,21 @@ assigneesOfTasks = describe "Assignees of tasks" $ do
   context "Arbitrary tasks and persons" $ do
 
     prop "Assigned tasks' assignees contain that person" $
-      forAll genPersonsTasks $ \(ps, ts) ->
-        forAll (elements ps) $ \p ->
+      forAll genPersonsTasks $ \(LBS ps ts) ->
+        forAll (elements $ M.elems ps) $ \p ->
           (`all` assignedTasks p ts) $ \t ->  -- can't use forAll here as
             p `elem` assignees t              -- asigned tasks could be empty
 
     prop "# Assigned + # unassigned = # all tasks" $
-      forAll genPersonsTasks $ \(ps, ts) ->
-        forAll (elements ps) $ \p ->
+      forAll genPersonsTasks $ \(LBS ps ts) ->
+        forAll (elements $ M.elems ps) $ \p ->
           let pAssigned   = assignedTasks p ts
               flatTasks   = concatMap flatten ts
               unAssigned  = filter (not . (p `elem`) . assignees) flatTasks
           in  length pAssigned + length unAssigned === length flatTasks
+
+personMapping :: Spec
+personMapping = describe "Map creation for Persons" $ do
+  prop "Map from person IDs matches given persons" $
+    forAll (listOf genericArbitrary) $ \persons ->
+    personMap persons `shouldBe` M.fromList (map ((,) =<< pid) persons)

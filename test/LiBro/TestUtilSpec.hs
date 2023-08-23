@@ -10,6 +10,7 @@ import Data.Char
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.List
+import qualified Data.Map as M
 import Data.Tree
 
 spec :: Spec
@@ -25,7 +26,7 @@ dataGeneration = describe "Generation of arbitrary libro data" $ do
         pid p `shouldBe` i
     prop "Person list has unique IDs" $ do
       forAll genPersons $ \ps -> do
-        let pids = pid <$> ps
+        let pids = pid <$> M.elems ps
         length (nub pids) `shouldBe` length pids
 
   describe "Task generation" $ do
