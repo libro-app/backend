@@ -4,6 +4,8 @@ module LiBro.Data where
 import LiBro.Data.SafeText
 import Data.Tree
 import Data.Function
+import Data.Map (Map)
+import qualified Data.Map as M
 import Data.Aeson
 import GHC.Generics
 import Data.Csv
@@ -22,6 +24,13 @@ instance FromJSON Person
 instance FromRecord Person
 instance DefaultOrdered Person
 instance ToNamedRecord Person
+
+-- |  'Person' container as a lookup table with person ID index.
+type Persons = Map Int Person
+
+-- |  Helper function to create a persons container.
+personMap :: [Person] -> Persons
+personMap = M.fromList . map ((,) =<< pid)
 
 -- |  Internal task representation.
 data Task = Task
@@ -42,3 +51,9 @@ type Tasks = Forest Task
 -- |  Find all 'Task's assigned to a given 'Person'.
 assignedTasks :: Person -> Tasks -> [Task]
 assignedTasks p = filter ((p `elem`) . assignees) . concatMap flatten
+
+-- |  Complete LiBro state in one type
+data LiBroData = LBS
+  { persons :: Persons
+  , tasks   :: Tasks
+  } deriving (Eq, Show)

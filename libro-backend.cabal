@@ -31,6 +31,7 @@ library
                     , LiBro.Data
                     , LiBro.Data.Storage
                     , LiBro.Data.SafeText
+                    , LiBro.Control
                     , LiBro.Util
   build-depends:      base >=4.14.0.0
                     , aeson
@@ -68,6 +69,7 @@ test-suite libro-backend-test
                     , LiBro.DataSpec
                     , LiBro.Data.StorageSpec
                     , LiBro.Data.SafeTextSpec
+                    , LiBro.ControlSpec
                     , LiBro.UtilSpec
   main-is:            run-all-tests.hs
   build-depends:      base >=4.14.0.0
