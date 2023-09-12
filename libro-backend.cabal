@@ -57,7 +57,7 @@ executable libro-backend
   main-is:            Main.hs
   build-depends:      base >=4.14.0.0
                     , libro-backend
-  hs-source-dirs:     app
+  hs-source-dirs:     server
 
 test-suite libro-backend-test
   default-language:   Haskell2010
