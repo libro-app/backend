@@ -17,6 +17,12 @@ Haskell dependencies:
 cabal install --only-dependencies all
 ```
 
+## Run the RESTful JSON web service
+
+```
+cabal run libro-backend
+```
+
 ## Run tests
  
 Running all the tests with `make test` may take some time. Run individual tests with

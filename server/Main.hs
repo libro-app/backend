@@ -1,4 +1,15 @@
 module Main where
 
+import LiBro.Config as Conf
+import LiBro.WebService.Server
+import Network.Wai.Handler.Warp
+
+configuredMain :: Config -> IO ()
+configuredMain config = do
+  let port = Conf.port $ Conf.server config
+  putStrLn $ "Serving LiBro backend on port " ++ show port ++ "."
+  run port libro
+
 main :: IO ()
-main = putStrLn "42"
+main = readConfig >>= maybe complain configuredMain
+  where complain = putStrLn "Invalid config: aborting"
