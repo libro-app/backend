@@ -17,5 +17,5 @@ helloLibro = describe "Dummy: hello libro!" $ with (return libro) $ do
       get "/" `shouldRespondWith` 404
 
   describe "Hello endpoint" $ do
-    it "Respond with greeting" $ do
-      get "/hello" `shouldRespondWith` "Hello LiBro!"
+    it "Respond with 200 greeting" $ do
+      get "/hello" `shouldRespondWith` "Hello LiBro!" {matchStatus = 200}
