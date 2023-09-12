@@ -34,10 +34,10 @@ instance Arbitrary Config where
     st  <- Storage  <$> name <*> name <*> name <*> name
     srv <- Server   <$> port
     return $ Config st srv
-    where chars = [choose ('a','z'), choose ('A','Z'), return '/']
-          name  = do  a   <- oneof chars
-                      z   <- oneof chars
-                      as  <- listOf $ oneof (return ' ' : chars)
+    where chars = '/' : ['a'..'z'] ++ ['A'..'Z']
+          name  = do  a   <- elements chars
+                      z   <- elements chars
+                      as  <- listOf $ elements (' ' : chars)
                       return (a : as ++ [z])
           port  = elements [1024 .. 49151] -- Wikipedia "Registered port"
 
