@@ -20,7 +20,7 @@ cabal install --only-dependencies all
 ## Run the RESTful JSON web service
 
 ```
-cabal run libro-backend
+make serve
 ```
 
 ## Run tests
