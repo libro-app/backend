@@ -1,6 +1,20 @@
 -- |  Helper functions and types that can be useful
 --    in more than one place.
-module LiBro.Util where
+module LiBro.Util
+  (
+  -- * Tree building
+    ParentList(..)
+  , readForest
+  -- * Counting monad transformer
+  , CountingT(..)
+  , next
+  , runCountingT
+  -- * XLSX as data backend
+  , storeAsXlsx
+  , loadFromXlsx
+  -- * Other helper functions
+  , guarded
+  ) where
 
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text as T
