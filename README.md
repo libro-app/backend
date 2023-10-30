@@ -17,6 +17,15 @@ Haskell dependencies:
 cabal install --only-dependencies all
 ```
 
+## Run tests
+ 
+Running all the tests with `make test` may take some time. Run individual tests with
+ 
+```
+$ cabal test --test-show-details=direct --test-options='--match="RESTful JSON web service"'
+$ make test_only pattern="SafeText wrapper/Safe packing"
+```
+
 ## Author and license
 
 Copyright (c) 2023 Mirko Westermeier
