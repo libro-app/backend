@@ -1,24 +1,35 @@
 -- |  LiBro data transformations for storage
-module LiBro.Data.Storage where
+module LiBro.Data.Storage
+  (
+  -- * Handling of multiple IDs in a single value
+    IdList(..)
+  , idListToStr
+  , strToIdList
+  -- * Storable task records
+  , TaskRecord(..)
+  , tasksToTaskRecords
+  , taskRecordsToTasks
+  -- * Top level data handling
+  , storePersons
+  , loadPersons
+  , storeTasks
+  , loadTasks
+  , storeData
+  , loadData
+  ) where
 
 import LiBro.Config
 import LiBro.Data
 import LiBro.Data.SafeText
 import LiBro.Util
-import Data.ByteString.Lazy (ByteString)
-import qualified Data.ByteString.Lazy as BS
 import Data.Function
 import Data.Map (Map, (!))
 import qualified Data.Map as M
 import Data.Tree
 import Data.Csv
 import qualified Data.ByteString.Char8 as B
-import qualified Data.Vector as V
 import GHC.Generics
-import System.IO.Temp
 import System.FilePath
-import System.Directory
-import System.Process
 
 -- |  A thin wrapper around lists of 'Int' with a simple
 --    (space-separated) 'String' representation.
@@ -51,8 +62,6 @@ data TaskRecord = TaskRecord
   } deriving (Show, Generic)
 
 instance Eq TaskRecord where (==) = (==) `on` trid
-instance FromRecord TaskRecord
-instance ToRecord TaskRecord
 instance DefaultOrdered TaskRecord
 instance FromNamedRecord TaskRecord
 instance ToNamedRecord TaskRecord
@@ -86,45 +95,13 @@ taskRecordsToTasks persons trs =
           , assignees   = (persons !) <$> ids (tAssignees tr)
           }
 
--- |  Store given CSV data as Excel spreadsheet. Stores the given
---    CSV data to a temporary file that is deleted afterwards and
---    uses the (hopefully) installed @libreoffice@ to convert. The
---    CSV data is stored in the (first) worksheet named @export@.
-storeCSVasXLSX :: FilePath -> ByteString -> IO ()
-storeCSVasXLSX fp csv = do
-  withSystemTempDirectory "excel-export" $ \tdir -> do
-    let csvFile   = tdir </> "export.csv"
-    let xlsxFile  = tdir </> "export.xlsx"
-    BS.writeFile csvFile csv
-    callCommand $ unwords
-      [ "libreoffice --calc --convert-to xlsx"
-      , "--outdir", tdir, csvFile
-      , "> /dev/null"
-      ]
-    renameFile xlsxFile fp
-
--- |  Load CSV from an Excel spreadsheet using @libreoffice@.
-loadCSVfromXLSX :: FilePath -> IO ByteString
-loadCSVfromXLSX fp = do
-  withSystemTempDirectory "excel-import" $ \tdir -> do
-    let csvFile   = tdir </> "import.csv"
-    let xlsxFile  = tdir </> "import.xlsx"
-    copyFile fp xlsxFile
-    callCommand $ unwords
-      [ "libreoffice --calc --convert-to csv"
-      , "--outdir", tdir, xlsxFile
-      , "> /dev/null"
-      ]
-    BS.readFile csvFile
-
 -- |  Store 'Person's at the configured storage space
 --    via 'Config'.
 storePersons :: Config -> Persons -> IO ()
 storePersons conf persons = do
   let sconf = storage conf
       fp    = directory sconf </> personFile sconf
-      csv   = encodeDefaultOrderedByName (M.elems persons)
-  storeCSVasXLSX fp csv
+  storeAsXlsx fp $ M.elems persons
 
 -- |  Load a list of 'Person's from the configured storage space
 --    via 'Config'.
@@ -132,18 +109,15 @@ loadPersons :: Config -> IO Persons
 loadPersons conf = do
   let sconf = storage conf
       fp    = directory sconf </> personFile sconf
-  csv <- loadCSVfromXLSX fp
-  let (Right records) = decode HasHeader csv
-  return $ personMap $ V.toList records
+  Right prs <- loadFromXlsx fp
+  return $ personMap prs
 
 -- |  Store 'Tasks' at the configured storage space via 'Config'.
 storeTasks :: Config -> Tasks -> IO ()
 storeTasks conf tasks = do
   let sconf = storage conf
       fp    = directory sconf </> tasksFile sconf
-      trs   = tasksToTaskRecords tasks
-      csv   = encodeDefaultOrderedByName trs
-  storeCSVasXLSX fp csv
+  storeAsXlsx fp $ tasksToTaskRecords tasks
 
 -- |  Load 'Tasks' from the configured storage space via 'Config'.
 --    Needs an additional 'Map' to find 'Person's for given person
@@ -152,8 +126,7 @@ loadTasks :: Config -> Persons -> IO Tasks
 loadTasks conf persons = do
   let sconf = storage conf
       fp    = directory sconf </> tasksFile sconf
-  csv <- loadCSVfromXLSX fp
-  let (Right records) = V.toList <$> decode HasHeader csv
+  Right records <- loadFromXlsx fp
   return $ taskRecordsToTasks persons records
 
 -- |  Store a complete dataset at the 'Config'ured file system
