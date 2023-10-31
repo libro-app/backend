@@ -1,5 +1,22 @@
 -- |  LiBro data transformations for storage
-module LiBro.Data.Storage where
+module LiBro.Data.Storage
+  (
+  -- * Handling of multiple IDs in a single value
+    IdList(..)
+  , idListToStr
+  , strToIdList
+  -- * Storable task records
+  , TaskRecord(..)
+  , tasksToTaskRecords
+  , taskRecordsToTasks
+  -- * Top level data handling
+  , storePersons
+  , loadPersons
+  , storeTasks
+  , loadTasks
+  , storeData
+  , loadData
+  ) where
 
 import LiBro.Config
 import LiBro.Data
