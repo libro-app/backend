@@ -54,7 +54,7 @@ xlsx :: Spec
 xlsx = describe "XLSX data conversion" $ do
 
   describe "Reading from simple spreadsheet file" $ do
-    result <- runIO $ loadFromXlsx "test/storage-files/wrapped.xlsx"
+    result <- runIO $ loadFromXlsx "test/storage-files/simple.xlsx"
     it "Correct result" $
       result `shouldBe` Right [ED 17 "42"]
 

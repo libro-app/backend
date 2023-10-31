@@ -93,5 +93,4 @@ test-suite libro-backend-test
                     , text
                     , transformers
                     , vector
-                    , xlsx
   build-tool-depends: hspec-discover:hspec-discover
