@@ -30,6 +30,7 @@ import Data.Csv
 import qualified Data.ByteString.Char8 as B
 import GHC.Generics
 import System.FilePath
+import System.Directory
 
 -- |  A thin wrapper around lists of 'Int' with a simple
 --    (space-separated) 'String' representation.
@@ -104,13 +105,16 @@ storePersons conf persons = do
   storeAsXlsx fp $ M.elems persons
 
 -- |  Load a list of 'Person's from the configured storage space
---    via 'Config'.
+--    via 'Config'. Returns empty data if no input file was found.
 loadPersons :: Config -> IO Persons
 loadPersons conf = do
   let sconf = storage conf
       fp    = directory sconf </> personFile sconf
-  Right prs <- loadFromXlsx fp
-  return $ personMap prs
+  exists <- doesFileExist fp
+  if not exists then return M.empty
+    else do
+      Right prs <- loadFromXlsx fp
+      return $ personMap prs
 
 -- |  Store 'Tasks' at the configured storage space via 'Config'.
 storeTasks :: Config -> Tasks -> IO ()
@@ -121,13 +125,16 @@ storeTasks conf tasks = do
 
 -- |  Load 'Tasks' from the configured storage space via 'Config'.
 --    Needs an additional 'Map' to find 'Person's for given person
---    ids ('Int').
+--    ids ('Int'). Returns empty data if no input file was found.
 loadTasks :: Config -> Persons -> IO Tasks
 loadTasks conf persons = do
   let sconf = storage conf
       fp    = directory sconf </> tasksFile sconf
-  Right records <- loadFromXlsx fp
-  return $ taskRecordsToTasks persons records
+  exists <- doesFileExist fp
+  if not exists then return []
+    else do
+      Right records <- loadFromXlsx fp
+      return $ taskRecordsToTasks persons records
 
 -- |  Store a complete dataset at the 'Config'ured file system
 --    locations.
@@ -137,7 +144,7 @@ storeData conf ld = do
   storeTasks    conf (tasks ld)
 
 -- |  Load a complete dataset from the 'Config'ured file system
---    locations.
+--    locations. Returns empty data if no input files were found.
 loadData :: Config -> IO LiBroData
 loadData conf = do
   persons <- loadPersons  conf

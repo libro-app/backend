@@ -13,6 +13,7 @@ import Data.Either
 import Data.Vector (Vector)
 import qualified Data.Vector as V
 import Data.Map ((!))
+import qualified Data.Map as M
 import Data.Tree
 import Data.Csv
 import Data.Default
@@ -128,6 +129,13 @@ recordsToTasks = describe "TaskRecord -> Task" $ do
 
 personStorage :: Spec
 personStorage = describe "XLSX storage of Person data" $ do
+
+  describe "Loading without a file" $ do
+    result <- runIO $ withSystemTempDirectory "person-storage" $ \tdir -> do
+      loadPersons $ def { storage = def { directory = tdir }}
+    it "Empty Person map" $
+      result `shouldBe` M.empty
+
   modifyMaxSuccess (const 5) $
     prop "Load . store = id" $
       forAll genPersons $ \persons -> ioProperty $ do
@@ -139,6 +147,13 @@ personStorage = describe "XLSX storage of Person data" $ do
 
 taskStorage :: Spec
 taskStorage = describe "XLSX storage of Task data" $ do
+
+  describe "Loading without a file" $ do
+    result <- runIO $ withSystemTempDirectory "task-storage" $ \tdir -> do
+      loadTasks (def { storage = def { directory = tdir }}) M.empty
+    it "Empty task list" $
+      result `shouldBe` []
+
   let persons = personMap
         [ Person 17 "Nina Schreubenmyrthe" "foo@bar"
         , Person 42 "Eugen Hammersbald" "baz@quux"
@@ -151,7 +166,7 @@ taskStorage = describe "XLSX storage of Task data" $ do
           ]
         ]
 
-  describe "With empty data" $ do
+  describe "Storing empty data" $ do
     loadedTasks <- runIO $ withSystemTempDirectory "task-storage" $ \tdir -> do
       let config = def { storage = def { directory = tdir }}
       storeTasks config []
@@ -159,7 +174,7 @@ taskStorage = describe "XLSX storage of Task data" $ do
     it "Got empty task forest" $
       loadedTasks `shouldBe` []
 
-  describe "With some task data" $ do
+  describe "Storing some task data" $ do
     loadedTasks <- runIO $ withSystemTempDirectory "task-storage" $ \tdir -> do
       let config = def { storage = def { directory = tdir }}
       storeTasks config tasks
