@@ -127,7 +127,7 @@ recordsToTasks = describe "TaskRecord -> Task" $ do
       taskRecordsToTasks persons taskRecords `shouldBe` taskForest
 
 personStorage :: Spec
-personStorage = describe "XSLX storage of Person data" $ do
+personStorage = describe "XLSX storage of Person data" $ do
   modifyMaxSuccess (const 5) $
     prop "Load . store = id" $
       forAll genPersons $ \persons -> ioProperty $ do
