@@ -6,9 +6,6 @@ import Test.QuickCheck
 
 import LiBro.TestUtil
 import LiBro.Data
-import Data.Char
-import Data.Text (Text)
-import qualified Data.Text as T
 import Data.List
 import qualified Data.Map as M
 import Data.Tree
@@ -52,6 +49,6 @@ dataGeneration = describe "Generation of arbitrary libro data" $ do
     prop "Task forest has only allowed assignees" $ do
       forAll genPersons $ \ps ->
         forAll (genTaskForest ps) $ \tf ->
-          let tasks = concatMap flatten tf
-          in  (`all` concatMap assignees tasks) $ \as ->
+          let myTasks = concatMap flatten tf
+          in  (`all` concatMap assignees myTasks) $ \as ->
                 as `elem` ps

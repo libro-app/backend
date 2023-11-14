@@ -23,7 +23,7 @@ import LiBro.Data
 import LiBro.Data.SafeText
 import LiBro.Util
 import Data.Function
-import Data.Map (Map, (!))
+import Data.Map ((!))
 import qualified Data.Map as M
 import Data.Tree
 import Data.Csv
@@ -71,10 +71,10 @@ instance ToNamedRecord TaskRecord
 tasksToTaskRecords :: Tasks -> [TaskRecord]
 tasksToTaskRecords = concatMap (storeTasks' Nothing)
   where storeTasks' parent (Node t ts) =
-          let tr  = toRecord parent t
+          let tr  = toTaskRecord parent t
               trs = storeTasks' (Just $ tid t) <$> ts
           in  tr : concat trs
-        toRecord p t = TaskRecord
+        toTaskRecord p t = TaskRecord
           { trid          = tid t
           , parentTid     = p
           , tTitle        = title t
@@ -84,25 +84,25 @@ tasksToTaskRecords = concatMap (storeTasks' Nothing)
 
 -- |  Load 'Task's from 'TaskRecord's. Needs to lookup 'Person's.
 taskRecordsToTasks :: Persons -> [TaskRecord] -> Tasks
-taskRecordsToTasks persons trs =
-  let tasks       = M.fromList $ map ((,) =<< trid) trs
+taskRecordsToTasks pmap trs =
+  let tmap        = M.fromList $ map ((,) =<< trid) trs
       parentList  = map ((,) <$> trid <*> parentTid) trs
       idForest    = readForest parentList
-  in  map (fmap $ fromRecord . (tasks !)) idForest
+  in  map (fmap $ fromRecord . (tmap !)) idForest
   where fromRecord tr = Task
           { tid         = trid tr
           , title       = tTitle tr
           , description = tDescription tr
-          , assignees   = (persons !) <$> ids (tAssignees tr)
+          , assignees   = (pmap !) <$> ids (tAssignees tr)
           }
 
 -- |  Store 'Person's at the configured storage space
 --    via 'Config'.
 storePersons :: Config -> Persons -> IO ()
-storePersons conf persons = do
+storePersons conf pmap = do
   let sconf = storage conf
       fp    = directory sconf </> personFile sconf
-  storeAsXlsx fp $ M.elems persons
+  storeAsXlsx fp $ M.elems pmap
 
 -- |  Load a list of 'Person's from the configured storage space
 --    via 'Config'. Returns empty data if no input file was found.
@@ -118,23 +118,23 @@ loadPersons conf = do
 
 -- |  Store 'Tasks' at the configured storage space via 'Config'.
 storeTasks :: Config -> Tasks -> IO ()
-storeTasks conf tasks = do
+storeTasks conf ts = do
   let sconf = storage conf
       fp    = directory sconf </> tasksFile sconf
-  storeAsXlsx fp $ tasksToTaskRecords tasks
+  storeAsXlsx fp $ tasksToTaskRecords ts
 
 -- |  Load 'Tasks' from the configured storage space via 'Config'.
 --    Needs an additional 'Map' to find 'Person's for given person
 --    ids ('Int'). Returns empty data if no input file was found.
 loadTasks :: Config -> Persons -> IO Tasks
-loadTasks conf persons = do
+loadTasks conf pmap = do
   let sconf = storage conf
       fp    = directory sconf </> tasksFile sconf
   exists <- doesFileExist fp
   if not exists then return []
     else do
       Right records <- loadFromXlsx fp
-      return $ taskRecordsToTasks persons records
+      return $ taskRecordsToTasks pmap records
 
 -- |  Store a complete dataset at the 'Config'ured file system
 --    locations.
@@ -147,6 +147,6 @@ storeData conf ld = do
 --    locations. Returns empty data if no input files were found.
 loadData :: Config -> IO LiBroData
 loadData conf = do
-  persons <- loadPersons  conf
-  tasks   <- loadTasks    conf persons
-  return $ LBS persons tasks
+  pmap <- loadPersons conf
+  ts   <- loadTasks   conf pmap
+  return $ LBS pmap ts

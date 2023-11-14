@@ -3,12 +3,11 @@ module LiBro.Data.SafeTextSpec where
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck
-import Data.Text.Arbitrary
+import Data.Text.Arbitrary () -- Instances only
 
 import LiBro.Data.SafeText
 import Data.String
 import Data.Maybe
-import Data.Either
 import Data.Either.Extra
 import qualified Data.Vector as V
 import Data.Vector (Vector)
@@ -121,7 +120,7 @@ showInstance :: Spec
 showInstance = describe "Show instance" $ do
   prop "Same result as Text on safe input" $ \t ->
     isSafeText t ==>
-    let (Just st) = safePackText t
+    let st = fromJust $ safePackText t
     in  show st `shouldBe` show t
 
 readInstance :: Spec
@@ -218,7 +217,7 @@ csvInstances = describe "CSV instances" $ do
   describe "SafeText accepts valid string input only" $ do
     prop "Parsing gives error message" $ \s ->
       not (isSafeString s) ==>
-      let (Left e) = readCSV (writeCSV' s)
+      let e = fromLeft "" $ readCSV (writeCSV' s)
           expected = "Unsafe string: " ++ show s
       in  e `shouldContain` expected
 

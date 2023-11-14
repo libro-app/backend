@@ -3,10 +3,10 @@
 module LiBro.Util
   (
   -- * Tree building
-    ParentList(..)
+    ParentList
   , readForest
   -- * Counting monad transformer
-  , CountingT(..)
+  , CountingT
   , next
   , runCountingT
   -- * XLSX as data backend
