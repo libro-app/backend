@@ -137,7 +137,7 @@ personStorage = describe "XLSX storage of Person data" $ do
     it "Empty Person map" $
       result `shouldBe` M.empty
 
-  modifyMaxSuccess (const 5) $
+  modifyMaxSuccess (const 20) $
     prop "Load . store = id" $
       forAll genPersons $ \pmap -> ioProperty $ do
         withSystemTempDirectory "person-storage" $ \tdir -> do
@@ -207,7 +207,7 @@ dataStorage = describe "Complete dataset" $ do
       loadedTasks `shouldBe` tForest
 
   context "With arbitrary datasets" $ do
-    modifyMaxSuccess (const 5) $
+    modifyMaxSuccess (const 20) $
       prop "load . store = id" $
         forAll genPersonsTasks $ \d ->
           ioProperty $ do

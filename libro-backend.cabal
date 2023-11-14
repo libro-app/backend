@@ -17,7 +17,8 @@ source-repository head
   branch:   main
   location: git://github.com/libro-app/backend.git
 
-extra-source-files:   test/storage-files/*.xlsx
+extra-source-files:   libreoffice-files/empty.ods
+                    , test/storage-files/*.xlsx
                     , test/storage-files/data/*.xlsx
 
 common basic
@@ -48,6 +49,7 @@ library
                     , data-default
                     , directory
                     , filepath
+                    , ghc
                     , mtl
                     , process
                     , QuickCheck
@@ -91,9 +93,9 @@ test-suite libro-backend-test
                     , extra
                     , filepath
                     , lens
+                    , process
                     , silently
                     , temporary
                     , text
                     , transformers
                     , vector
-  build-tool-depends: hspec-discover:hspec-discover

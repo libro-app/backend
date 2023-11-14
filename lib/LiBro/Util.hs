@@ -12,6 +12,10 @@ module LiBro.Util
   -- * XLSX as data backend
   , storeAsXlsx
   , loadFromXlsx
+  -- * Shady LibreOffice handling
+  , libreOfficeIsRunning
+  , spawnLibreOffice
+  , killLibreOffice
   -- * Other helper functions
   , guarded
   ) where
@@ -28,12 +32,15 @@ import Data.Tree
 import Data.Maybe
 import Data.Csv
 import Data.Bifunctor
+import GHC.Utils.Monad
 import Control.Monad.State
 import Control.Applicative
+import Control.Exception
 import System.FilePath
 import System.Directory
 import System.IO.Temp
 import System.Process
+import System.Exit
 
 -- |  A 'Tree'/'Forest' representation as a linear list.
 --    All entries point to their parent.
@@ -108,9 +115,53 @@ loadFromXlsx fp = do
     let xlsxFile = tdir </> "import.xlsx"
     copyFile fp xlsxFile
     callCommand $ unwords
-      [ "libreoffice --calc --convert-to csv"
-      , "--outdir", tdir, xlsxFile
+      [ "libreoffice"
+      , "--calc"
+      , "--convert-to csv" -- implies headless
+      , "--outdir", tdir
+      , xlsxFile
       , "> /dev/null"
       ]
     csv <- LBS.readFile (xlsxFile -<.> "csv")
     return $ map unWrap . V.toList . snd <$> decodeByName csv
+
+libreOfficeProcessNames :: [String]
+libreOfficeProcessNames = words "libreoffice oosplash soffice.bin"
+
+-- |  Tries to report if a LibreOffice instance is already running
+libreOfficeIsRunning :: IO Bool
+libreOfficeIsRunning = (`anyM` libreOfficeProcessNames) $ \name -> do
+  (_, output, _) <- readProcessWithExitCode "pgrep" [name] ""
+  return $ not.null $ lines output
+
+-- |  Starts LibreOffice in the background.
+--    This is useful to speed up conversion.
+spawnLibreOffice :: IO ()
+spawnLibreOffice = do
+  cleanupLibreOffice
+  void $ spawnCommand command
+  where command = unwords
+                    [ "libreoffice"
+                    , "--calc"
+                    , "--headless"
+                    , "--norestore"
+                    , "--view"
+                    , dummy
+                    , "> /dev/null"
+                    ]
+        dummy   = "libreoffice-files/empty.ods"
+
+-- |  Kills LibreOffice with SIGKILL, if it is actually running.
+--    See 'libreOfficeIsRunning'.
+killLibreOffice :: IO ()
+killLibreOffice = do
+  whenM libreOfficeIsRunning $ do
+    ignoreExitCode (callCommand killCommand)
+    cleanupLibreOffice
+  where killCommand       = "kill -9 $(pidof "
+                              ++ unwords libreOfficeProcessNames
+                              ++ ")"
+        ignoreExitCode a  = catch a (const $ return () :: ExitCode -> IO ())
+
+cleanupLibreOffice :: IO ()
+cleanupLibreOffice = callCommand "rm -f libreoffice-files/.~lock.empty.ods#"

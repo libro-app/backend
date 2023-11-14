@@ -69,7 +69,7 @@ xlsx = describe "XLSX data conversion" $ do
       it "Correct output data" $ result `shouldBe` Right input
 
     context "With arbitrary data" $ do
-      modifyMaxSuccess (const 5) $
+      modifyMaxSuccess (const 20) $
         prop "Correct output data" $ \d ->
           ioProperty $ withSystemTempDirectory "xlsx-export" $ \tdir -> do
             let fp = tdir </> "arbitrary.xlsx"
