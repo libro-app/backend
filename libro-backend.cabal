@@ -17,14 +17,20 @@ source-repository head
   branch:   main
   location: git://github.com/libro-app/backend.git
 
-common warnings
-  ghc-options:        -Wall
-
 extra-source-files:   test/storage-files/*.xlsx
                     , test/storage-files/data/*.xlsx
 
-library
+common basic
   default-language:   Haskell2010
+  build-depends:      base >= 4.14.0.0
+  ghc-options:        -Wall
+
+common consumer
+  import:             basic
+  build-depends:      libro-backend
+
+library
+  import:             basic
   default-extensions: OverloadedStrings
                     , DeriveGeneric
   exposed-modules:    LiBro.Config
@@ -33,8 +39,7 @@ library
                     , LiBro.Data.SafeText
                     , LiBro.Control
                     , LiBro.Util
-  build-depends:      base >=4.14.0.0
-                    , aeson
+  build-depends:      aeson
                     , attoparsec
                     , bytestring
                     , cassava
@@ -53,14 +58,13 @@ library
   hs-source-dirs:     lib
 
 executable libro-backend
-  default-language:   Haskell2010
+  import:             consumer
   main-is:            Main.hs
-  build-depends:      base >=4.14.0.0
-                    , libro-backend
+  build-depends:      libro-backend
   hs-source-dirs:     app
 
 test-suite libro-backend-test
-  default-language:   Haskell2010
+  import:             consumer
   default-extensions: OverloadedStrings
                     , DeriveGeneric
   type:               exitcode-stdio-1.0
@@ -74,12 +78,11 @@ test-suite libro-backend-test
                     , LiBro.ControlSpec
                     , LiBro.UtilSpec
   main-is:            run-all-tests.hs
-  build-depends:      base >=4.14.0.0
+  build-depends:      libro-backend
                     , hspec
                     , QuickCheck
                     , quickcheck-text
                     , generic-arbitrary
-                    , libro-backend
                     , aeson
                     , bytestring
                     , cassava
