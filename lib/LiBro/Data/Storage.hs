@@ -124,8 +124,8 @@ storeTasks conf ts = do
   storeAsXlsx fp $ tasksToTaskRecords ts
 
 -- |  Load 'Tasks' from the configured storage space via 'Config'.
---    Needs an additional 'Map' to find 'Person's for given person
---    ids ('Int'). Returns empty data if no input file was found.
+--    Needs an additional 'Data.Map.Map' to find 'Person's for given
+--    person ids ('Int'). Returns empty data if no input file was found.
 loadTasks :: Config -> Persons -> IO Tasks
 loadTasks conf pmap = do
   let sconf = storage conf
