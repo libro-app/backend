@@ -33,6 +33,7 @@ import Data.Maybe
 import Data.Csv
 import Data.Bifunctor
 import GHC.Utils.Monad
+import Control.Monad
 import Control.Monad.State
 import Control.Applicative
 import Control.Exception
