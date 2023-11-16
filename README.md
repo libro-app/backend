@@ -32,6 +32,8 @@ $ cabal test --test-show-details=direct --test-options='--match="RESTful JSON we
 $ make test_only pattern="SafeText wrapper/Safe packing"
 ```
 
+**ATTENCIÓNE:** The test suite starts a headless LibreOffice instance (if not already running) to dramatically speed up data conversion property tests. Don't start LibreOffice while tests are running as it will be killed afterwards.
+
 ## Author and license
 
 Copyright (c) 2023 Mirko Westermeier

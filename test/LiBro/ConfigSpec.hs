@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 module LiBro.ConfigSpec where
 
 import Test.Hspec
@@ -92,11 +94,11 @@ reading = describe "Reading configuration from file" $ do
       config `shouldBe` Just simple
 
   context "With invalid file contents" $ do
-    (output, result) <- runIO $ withSystemTempFile "config.ini" $ \fp h -> do
+    (errOutput, result) <- runIO $ withSystemTempFile "config.ini" $ \fp h -> do
       hPutStr h "ILLEGAL INI" >> hClose h
       hCapture [stderr] $ readConfigFrom fp
     it "no result" $
       result `shouldSatisfy` isNothing
     it "get parser error message" $ do
-      output `shouldStartWith` "Error parsing"
-      output `shouldContain` "ILLEGAL INI"
+      errOutput `shouldStartWith` "Error parsing"
+      errOutput `shouldContain` "ILLEGAL INI"

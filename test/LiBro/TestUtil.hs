@@ -1,35 +1,33 @@
 module LiBro.TestUtil where
 
 import LiBro.Data
-import LiBro.Data.SafeText
 import LiBro.Util
 import Data.List
 import qualified Data.Map as M
 import Data.Tree
-import Data.Bifunctor
 import Test.QuickCheck
 import Control.Monad
 import Control.Monad.Trans.Class
 
 -- Person generator with a given person ID.
 genPerson :: Int -> Gen Person
-genPerson pid = Person  <$> return pid
-                        <*> arbitrary
-                        <*> arbitrary
+genPerson personId = Person <$> return personId
+                            <*> arbitrary
+                            <*> arbitrary
 
 -- Unique person lists generator
 genPersons :: Gen Persons
 genPersons = do
-  persons <- mapM genPerson =<< arbitrary `suchThat` unique
-  return $ personMap persons
+  ps <- mapM genPerson =<< arbitrary `suchThat` unique
+  return $ personMap ps
   where unique = (==) <*> nub
 
 -- Task generator with task ID and _allowed_ persons
 genTask :: Persons -> Int -> Gen Task
-genTask ps tid = Task <$> return tid
-                      <*> arbitrary
-                      <*> arbitrary
-                      <*> sublistOf (M.elems ps)
+genTask ps taskId = Task  <$> return taskId
+                          <*> arbitrary
+                          <*> arbitrary
+                          <*> sublistOf (M.elems ps)
 
 -- |  A QuickCheck 'Gen' variant that can count
 --    (helpful for unique IDs).
@@ -43,8 +41,8 @@ scaledListOf s g = do
 
 countingGenTaskTree :: Persons -> CountingGen (Tree Task)
 countingGenTaskTree ps = do
-  tid       <- next
-  task      <- lift $ genTask ps tid
+  taskId    <- next
+  task      <- lift $ genTask ps taskId
   children  <- scaledListOf (`div` 50) $ countingGenTaskTree ps
   return $ Node task children
 

@@ -75,7 +75,7 @@ safeTextParser input
   | null unsafe = [(safeText, "")]
   | otherwise   = []
   where (safe, unsafe)  = span isSafeChar input
-        (Just safeText) = safePack safe
+        safeText        = fromJust $ safePack safe
 
 instance Read SafeText where
   readsPrec _ = safeTextParser

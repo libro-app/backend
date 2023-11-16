@@ -19,7 +19,7 @@ initData :: Config -> MVar Blocking -> MVar LiBroData -> IO ()
 initData config blocking libroData = do
   putMVar blocking Reading
   putMVar libroData =<< loadData config
-  takeMVar blocking
+  _ <- takeMVar blocking
   return ()
 
 -- |  Try to store shared state data. Expects the given blocking MVar
@@ -32,5 +32,5 @@ saveData config blocking libroData = do
     else do
       putMVar blocking Writing
       storeData config =<< readMVar libroData
-      takeMVar blocking
+      _ <- takeMVar blocking
       return True

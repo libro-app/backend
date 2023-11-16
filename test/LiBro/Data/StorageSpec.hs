@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
 module LiBro.Data.StorageSpec where
 
 import Test.Hspec
@@ -53,7 +54,7 @@ taskCsv = describe "Convert TaskRecords <-> CSV" $ do
 
   context "With given task data" $ do
     it "Correct CSV output" $
-      encodeDefaultOrderedByName tasks
+      encodeDefaultOrderedByName myTasks
         `shouldBe` csv
 
   context "With given invalid CSV data" $ do
@@ -67,11 +68,11 @@ taskCsv = describe "Convert TaskRecords <-> CSV" $ do
     let result = decodeByName csv
     it "Correct tasks data" $
       result `shouldBe`
-        Right (headerOrder (head tasks), V.fromList tasks)
+        Right (headerOrder (head myTasks), V.fromList myTasks)
 
-    where tasks = [ TaskRecord 42 (Just 17) "foo" "bar" (IdList [])
-                  , TaskRecord 17 Nothing "baz" "quux" (IdList [1, 67, 78926])
-                  ]
+    where myTasks = [ TaskRecord 42 (Just 17) "foo" "bar" (IdList [])
+                    , TaskRecord 17 Nothing "baz" "quux" (IdList [1, 67, 78926])
+                    ]
           csv   = "trid,parentTid,tTitle,tDescription,tAssignees\r\n\
                   \42,17,foo,bar,\r\n\
                   \17,,baz,quux,1 67 78926\r\n\
@@ -104,7 +105,7 @@ recordsToTasks :: Spec
 recordsToTasks = describe "TaskRecord -> Task" $ do
 
   context "With given simple track records and person table" $ do
-    let persons = personMap
+    let pmap = personMap
           [ Person 17 "Nina Schreubenmyrthe" "foo@bar"
           , Person 42 "Eugen Hammersbald" "baz@quux"
           ]
@@ -125,7 +126,7 @@ recordsToTasks = describe "TaskRecord -> Task" $ do
             ]
           ]
     it "Correct task forest" $
-      taskRecordsToTasks persons taskRecords `shouldBe` taskForest
+      taskRecordsToTasks pmap taskRecords `shouldBe` taskForest
 
 personStorage :: Spec
 personStorage = describe "XLSX storage of Person data" $ do
@@ -136,14 +137,14 @@ personStorage = describe "XLSX storage of Person data" $ do
     it "Empty Person map" $
       result `shouldBe` M.empty
 
-  modifyMaxSuccess (const 5) $
+  modifyMaxSuccess (const 20) $
     prop "Load . store = id" $
-      forAll genPersons $ \persons -> ioProperty $ do
+      forAll genPersons $ \pmap -> ioProperty $ do
         withSystemTempDirectory "person-storage" $ \tdir -> do
           let config = def { storage = def { directory = tdir }}
-          storePersons config persons
+          storePersons config pmap
           loadedPersons <- loadPersons config
-          return $ loadedPersons === persons
+          return $ loadedPersons === pmap
 
 taskStorage :: Spec
 taskStorage = describe "XLSX storage of Task data" $ do
@@ -154,15 +155,15 @@ taskStorage = describe "XLSX storage of Task data" $ do
     it "Empty task list" $
       result `shouldBe` []
 
-  let persons = personMap
+  let pmap  = personMap
         [ Person 17 "Nina Schreubenmyrthe" "foo@bar"
         , Person 42 "Eugen Hammersbald" "baz@quux"
         ]
-      tasks   =
+      ts    =
         [ Node (Task 37 "fooTitle" "fooDescr" []) []
-        , Node (Task 67 "barTitle" "barDescr" [persons ! 17])
-          [ Node (Task 87 "bazTitle" "bazDescr" [persons ! 42]) []
-          , Node (Task 97 "quuxTitle" "quuxDescr" [persons ! 17, persons ! 42]) []
+        , Node (Task 67 "barTitle" "barDescr" [pmap ! 17])
+          [ Node (Task 87 "bazTitle" "bazDescr" [pmap ! 42]) []
+          , Node (Task 97 "quuxTitle" "quuxDescr" [pmap ! 17, pmap ! 42]) []
           ]
         ]
 
@@ -170,43 +171,43 @@ taskStorage = describe "XLSX storage of Task data" $ do
     loadedTasks <- runIO $ withSystemTempDirectory "task-storage" $ \tdir -> do
       let config = def { storage = def { directory = tdir }}
       storeTasks config []
-      loadTasks config persons
+      loadTasks config pmap
     it "Got empty task forest" $
       loadedTasks `shouldBe` []
 
   describe "Storing some task data" $ do
     loadedTasks <- runIO $ withSystemTempDirectory "task-storage" $ \tdir -> do
       let config = def { storage = def { directory = tdir }}
-      storeTasks config tasks
-      loadTasks config persons
+      storeTasks config ts
+      loadTasks config pmap
     it "Got the right task forest" $
-      loadedTasks `shouldBe` tasks
+      loadedTasks `shouldBe` ts
 
 dataStorage :: Spec
 dataStorage = describe "Complete dataset" $ do
 
   context "With simple data files" $ do
-    let persons = [ Person 1 "Foo Bar" "foo@bar.com"
+    let pmap    = [ Person 1 "Foo Bar" "foo@bar.com"
                   , Person 2 "Baz Quux" "baz@quux.com"
                   ]
-        tasks   = [ Task 17 "t17" "d17" [persons !! 0, persons !! 1]
-                  , Task 37 "t37" "d37" [persons !! 1]
+        ts      = [ Task 17 "t17" "d17" [pmap !! 0, pmap !! 1]
+                  , Task 37 "t37" "d37" [pmap !! 1]
                   , Task 42 "t42" "d42" []
                   ]
-        tForest = [ Node (tasks !! 0)
-                    [ Node (tasks !! 1) []
-                    , Node (tasks !! 2) []
+        tForest = [ Node (ts !! 0)
+                    [ Node (ts !! 1) []
+                    , Node (ts !! 2) []
                     ]
                   ]
     let conf = def { storage = def { directory = "test/storage-files/data" }}
     (LBS loadedPersons loadedTasks) <- runIO $ loadData conf
     it "Load correct persons" $
-      loadedPersons `shouldBe` personMap persons
+      loadedPersons `shouldBe` personMap pmap
     it "Load correct task forest" $
       loadedTasks `shouldBe` tForest
 
   context "With arbitrary datasets" $ do
-    modifyMaxSuccess (const 5) $
+    modifyMaxSuccess (const 20) $
       prop "load . store = id" $
         forAll genPersonsTasks $ \d ->
           ioProperty $ do

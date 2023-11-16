@@ -32,7 +32,7 @@ forestFromParentList = describe "Read Forest from parent list" $ do
     it "Read correct forest with sorted children" $
       readForest parentList `shouldBe`
         [ Node 17 [ Node 34 [], Node 51 []]
-        , Node 42 [ Node 84 [ Node 168 [] ]]
+        , Node 42 [ Node 84 [ Node (168 :: Int) [] ]]
         ]
 
 countingT :: Spec
@@ -62,14 +62,14 @@ xlsx = describe "XLSX data conversion" $ do
 
     context "With simple example data" $ do
       let input = [ED 42 "Hallö\nWelt!", ED 0 "=foo"]
-      output <- runIO $ withSystemTempDirectory "xlsx-export" $ \tdir -> do
+      result <- runIO $ withSystemTempDirectory "xlsx-export" $ \tdir -> do
         let fp = tdir </> "simple.xlsx"
         storeAsXlsx fp input
         loadFromXlsx fp
-      it "Correct output data" $ output `shouldBe` Right input
+      it "Correct output data" $ result `shouldBe` Right input
 
     context "With arbitrary data" $ do
-      modifyMaxSuccess (const 5) $
+      modifyMaxSuccess (const 20) $
         prop "Correct output data" $ \d ->
           ioProperty $ withSystemTempDirectory "xlsx-export" $ \tdir -> do
             let fp = tdir </> "arbitrary.xlsx"
@@ -82,9 +82,9 @@ guarding = describe "Guarded Alternative value creation" $ do
 
   context "Alternative: Maybe" $ do
     it "Guard a non-42 for 42-ness" $
-      guarded (== 42) 17 `shouldBe` Nothing
+      guarded (== 42) (17 :: Int) `shouldBe` Nothing
     it "Guard a 42 for 42-ness" $
-      guarded (== 42) 42 `shouldBe` Just 42
+      guarded (== 42) (42 :: Int) `shouldBe` Just 42
     prop "Guard even: Even" $ \i ->
       even (i :: Int) ==>
       guarded even i `shouldBe` Just i

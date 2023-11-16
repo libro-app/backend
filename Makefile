@@ -1,9 +1,12 @@
-.PHONY: all build test test_only doc serve stats
+.PHONY: all build warnings test test_only doc serve stats
 
 all: build test doc stats
 
 build:
 	cabal build --enable-tests all
+
+warnings:
+	cabal build --enable-tests --ghc-options="-fforce-recomp" all
 
 test:
 	cabal test --test-show-details=direct
