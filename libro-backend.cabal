@@ -41,7 +41,9 @@ library
                     , LiBro.Data.Storage
                     , LiBro.Data.SafeText
                     , LiBro.Control
+                    , LiBro.WebService
                     , LiBro.WebService.API
+                    , LiBro.WebService.Types
                     , LiBro.WebService.Server
                     , LiBro.Util
   build-depends:      aeson
@@ -108,3 +110,4 @@ test-suite libro-backend-test
                     , text
                     , transformers
                     , vector
+                    , wai

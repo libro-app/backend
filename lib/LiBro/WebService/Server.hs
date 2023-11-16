@@ -1,10 +1,18 @@
 module LiBro.WebService.Server where
 
 import LiBro.WebService.API
+import LiBro.WebService.Types
 import Servant
 
-server :: Server LiBroAPI
-server = return "Hello LiBro!"
+handleHello :: Handler PersonIDs
+handleHello = return $ PersonIDs [17, 42]
+
+handleYay :: Handler String
+handleYay = return "Yay!"
+
+libroServer :: Server LiBroAPI
+libroServer =     handleHello
+            :<|>  handleYay
 
 libro :: Application
-libro = serve libroApi server
+libro = serve libroApi libroServer
