@@ -10,7 +10,7 @@ license:              MIT
 license-file:         LICENSE
 author:               Mirko Westermeier
 maintainer:           mirko@westermeier.de
-copyright:            (c) 2023 Mirko Westermeier
+copyright:            (c) 2023-2024 Mirko Westermeier
 
 source-repository head
   type:     git

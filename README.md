@@ -30,6 +30,6 @@ $ make test_only pattern="SafeText wrapper/Safe packing"
 
 ## Author and license
 
-Copyright (c) 2023 Mirko Westermeier
+Copyright (c) 2023-2024 Mirko Westermeier
 
 Released under the MIT license (see LICENSE) for details.
