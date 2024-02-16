@@ -10,6 +10,7 @@ import qualified LiBro.ConfigSpec         as Config
 import qualified LiBro.ControlSpec        as Control
 import qualified LiBro.TestUtilSpec       as TestUtil
 import qualified LiBro.UtilSpec           as Util
+import qualified LiBro.WebServiceSpec     as WebService
 
 withLibreOffice :: IO () -> IO ()
 withLibreOffice runTests = do
@@ -31,3 +32,4 @@ main = hspec $ aroundAll_ withLibreOffice $ do
   Control.spec
   TestUtil.spec
   Util.spec
+  WebService.spec

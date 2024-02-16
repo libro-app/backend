@@ -41,8 +41,8 @@ library
                     , LiBro.Data.Storage
                     , LiBro.Data.SafeText
                     , LiBro.Control
-                    , LiBro.WebService.API
-                    , LiBro.WebService.Server
+                    , LiBro.WebService
+                    , LiBro.WebService.State
                     , LiBro.Util
   build-depends:      aeson
                     , attoparsec
@@ -75,6 +75,7 @@ executable libro-backend
 test-suite libro-backend-test
   import:             consumer
   default-extensions: OverloadedStrings
+                    , QuasiQuotes
                     , DeriveGeneric
   type:               exitcode-stdio-1.0
   hs-source-dirs:     test
@@ -91,6 +92,7 @@ test-suite libro-backend-test
   build-depends:      libro-backend
                     , hspec
                     , hspec-wai
+                    , hspec-wai-json
                     , QuickCheck
                     , quickcheck-text
                     , generic-arbitrary
@@ -108,3 +110,4 @@ test-suite libro-backend-test
                     , text
                     , transformers
                     , vector
+                    , wai

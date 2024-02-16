@@ -2,9 +2,10 @@ module LiBro.WebServiceSpec where
 
 import Test.Hspec
 import Test.Hspec.Wai
+import Test.Hspec.Wai.JSON
 import Test.Hspec.Wai.QuickCheck
 
-import LiBro.WebService.Server
+import LiBro.WebService
 import Data.ByteString
 
 spec :: Spec
@@ -14,9 +15,15 @@ spec = describe "RESTful JSON web service" $ do
 helloLibro :: Spec
 helloLibro = describe "Dummy: hello libro!" $ with (return libro) $ do
 
-  describe "Hello endpoint" $ do
+  describe "Yay endpoint" $ do
     it "Respond with 200 greeting" $ do
-      get "/hello" `shouldRespondWith` "Hello LiBro!" {matchStatus = 200}
+      get "/yay" `shouldRespondWith` "Yay!" {matchStatus = 200}
+
+  describe "Dummy person ID endpoint" $ do
+    it "Respond with IDs" $ do
+      get "/hello" `shouldRespondWith`
+        [json|{"personIDs":[17,42]}|]
+        {matchStatus = 200}
 
   describe "Any other endpoint" $ do
     it "Respond with 404" $ do

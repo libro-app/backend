@@ -1,7 +1,7 @@
 module Main where
 
 import LiBro.Config as Conf
-import LiBro.WebService.Server
+import LiBro.WebService
 import Network.Wai.Handler.Warp
 
 configuredMain :: Config -> IO ()
