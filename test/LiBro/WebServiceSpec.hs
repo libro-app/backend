@@ -5,7 +5,9 @@ import Test.Hspec.Wai
 import Test.Hspec.Wai.JSON
 import Test.Hspec.Wai.QuickCheck
 
+import LiBro.Config
 import LiBro.WebService
+import Data.Default
 import Data.ByteString
 
 spec :: Spec
@@ -13,7 +15,7 @@ spec = describe "RESTful JSON web service" $ do
   helloLibro
 
 helloLibro :: Spec
-helloLibro = describe "Dummy: hello libro!" $ with (return libro) $ do
+helloLibro = describe "Dummy: hello libro!" $ with (return cfgLibro) $ do
 
   describe "Yay endpoint" $ do
     it "Respond with 200 greeting" $ do
@@ -30,3 +32,5 @@ helloLibro = describe "Dummy: hello libro!" $ with (return libro) $ do
       property $ \endpoint ->
         show endpoint /= "hello" ==>
         get (pack endpoint) `shouldRespondWith` 404
+
+  where cfgLibro = libro $ Config def def

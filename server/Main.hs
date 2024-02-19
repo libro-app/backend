@@ -5,10 +5,10 @@ import LiBro.WebService
 import Network.Wai.Handler.Warp
 
 configuredMain :: Config -> IO ()
-configuredMain config = do
-  let port = Conf.port $ Conf.server config
+configuredMain cfg = do
+  let port = Conf.port $ Conf.server cfg
   putStrLn $ "Serving LiBro backend on port " ++ show port ++ "."
-  run port libro
+  run port (libro cfg)
 
 main :: IO ()
 main = readConfig >>= maybe complain configuredMain

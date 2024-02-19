@@ -1,5 +1,6 @@
 module LiBro.WebService where
 
+import LiBro.Config
 import Data.Aeson
 import Data.Proxy
 import Servant
@@ -11,9 +12,9 @@ instance ToJSON PersonIDs
 type LiBroAPI = "hello" :> Get '[JSON]      PersonIDs
           :<|>  "yay"   :> Get '[PlainText] String
 
-libroServer :: Server LiBroAPI
-libroServer =     handleHello
-            :<|>  handleYay
+libroServer :: Config -> Server LiBroAPI
+libroServer cfg =     handleHello
+                :<|>  handleYay
   where
         handleHello :: Handler PersonIDs
         handleHello = return $ PersonIDs [17, 42]
@@ -24,6 +25,5 @@ libroServer =     handleHello
 libroApi :: Proxy LiBroAPI
 libroApi = Proxy
 
-libro :: Application
-libro = serve libroApi libroServer
-
+libro :: Config -> Application
+libro = serve libroApi . libroServer
