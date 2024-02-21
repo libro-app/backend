@@ -20,14 +20,14 @@ dataInitialization :: Spec
 dataInitialization = describe "Blocking data loading" $ do
 
   context "With simple data files" $ do
-    let config = def { storage = def { directory = "test/storage-files/data" }}
-    expectedData  <- runIO $ loadData config
+    let cfg = def { storage = def { directory = "test/storage-files/data" }}
+    expectedData  <- runIO $ loadData cfg
     blocking      <- runIO $ newEmptyMVar
     libroData     <- runIO $ newEmptyMVar
     (beb, bed, aeb, aned, ld) <- runIO $ do
       beforeEmptyBlocking <- isEmptyMVar blocking
       beforeEmptyData     <- isEmptyMVar libroData
-      initData config blocking libroData
+      initData cfg blocking libroData
       afterEmptyBlocking  <- isEmptyMVar blocking
       afterNonEmptyData   <- isEmptyMVar libroData
       loadedData          <- readMVar libroData
