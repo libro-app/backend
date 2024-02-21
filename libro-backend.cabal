@@ -42,7 +42,6 @@ library
                     , LiBro.Data.SafeText
                     , LiBro.Control
                     , LiBro.WebService
-                    , LiBro.WebService.State
                     , LiBro.Util
   build-depends:      aeson
                     , attoparsec

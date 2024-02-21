@@ -5,6 +5,7 @@ import LiBro.Config
 import LiBro.Data
 import LiBro.Data.Storage
 import Control.Concurrent
+import Control.Monad.Reader
 
 -- |  Represents a blocking action because the system is loading
 --    or saving data.
@@ -34,3 +35,51 @@ saveData cfg blocking libroData = do
       storeData cfg =<< readMVar libroData
       _ <- takeMVar blocking
       return True
+
+-- |  Shared libro system state to access data any time.
+data LiBroState = LiBroState
+  { config      :: Config
+  , mvBlocking  :: MVar Blocking
+  , mvData      :: MVar LiBroData
+  }
+
+-- |  Initialization of a 'LiBroState'.
+initLiBroState :: Config -> IO LiBroState
+initLiBroState cfg = do
+  mvb <- newEmptyMVar
+  mvd <- newEmptyMVar
+  initData cfg mvb mvd
+  return $ LiBroState cfg mvb mvd
+
+-- |  'Config' accessor action.
+lsConfig :: ReaderT LiBroState IO Config
+lsConfig = asks config
+
+-- |  Checks whether the system is blocked
+--    and by what type of 'Blocking' action.
+lsBlockedBy :: ReaderT LiBroState IO (Maybe Blocking)
+lsBlockedBy = do
+  mvb <- asks mvBlocking
+  lift $ tryTakeMVar mvb
+
+-- |  'LiBroData' accessor action.
+lsData :: ReaderT LiBroState IO LiBroData
+lsData = do
+  mvd <- asks mvData
+  lift $ readMVar mvd
+
+-- |  'initData' action.
+lsInitData :: ReaderT LiBroState IO ()
+lsInitData = do
+  cfg <- asks config
+  mvb <- asks mvBlocking
+  mvd <- asks mvData
+  lift $ initData cfg mvb mvd
+
+-- |  'saveData' action.
+lsSaveData :: ReaderT LiBroState IO Bool
+lsSaveData = do
+  cfg <- asks config
+  mvb <- asks mvBlocking
+  mvd <- asks mvData
+  lift $ saveData cfg mvb mvd
