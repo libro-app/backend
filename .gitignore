@@ -4,6 +4,9 @@
 # LibreOffice swap files
 .~lock.*#
 
+# Data storage files
+data-storage/*.xlsx
+
 # Generated documentstion
 api-docs
 
