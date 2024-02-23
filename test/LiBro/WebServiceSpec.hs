@@ -29,6 +29,10 @@ listings = describe "Simple data listing" $ with lws $ do
         get "/person/2" `shouldRespondWith`
           [json|{"pid": 2, "name": "Baz Quux", "email": "baz@quux.com"}|]
           {matchStatus = 200}
+      it "404 if person does not exist" $ do
+        get "/person/42" `shouldRespondWith`
+          "Person not found"
+          {matchStatus = 404}
 
   context "Task listing endpoints" $ do
 

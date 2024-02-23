@@ -3,7 +3,6 @@ module LiBro.WebService where
 import LiBro.Control
 import LiBro.Data
 import qualified Data.Map as M
-import Data.Map ((!))
 import Data.Tree
 import Data.Aeson
 import Data.Proxy
@@ -38,7 +37,9 @@ libroServer =     hPersonIDs
         hPersonDetails :: Int -> LiBroHandler Person
         hPersonDetails pId = do
           ps <- persons <$> runAction lsData
-          return $ ps ! pId
+          case M.lookup pId ps of
+            Just p  -> return p
+            Nothing -> throwError err404 {errBody = "Person not found"}
 
         hTaskIDs :: LiBroHandler TaskIDs
         hTaskIDs = do
