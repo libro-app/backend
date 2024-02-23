@@ -11,10 +11,10 @@ import Data.Default
 
 spec :: Spec
 spec = describe "RESTful JSON web service" $ do
-  personSpecs
+  listings
 
-personSpecs :: Spec
-personSpecs = describe "Person related endpoints" $ with lws $ do
+listings :: Spec
+listings = describe "Simple data listing endpoints" $ with lws $ do
 
   describe "Person ID listing endpoint" $ do
     it "Respond with IDs" $ do
