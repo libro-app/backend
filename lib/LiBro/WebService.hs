@@ -20,13 +20,16 @@ type LiBroHandler = ReaderT LiBroState Handler
 runAction :: Action a -> LiBroHandler a
 runAction action = ask >>= liftIO . runReaderT action
 
-type LiBroAPI = "person"                        :> Get '[JSON]  PersonIDs
-          :<|>  "person"  :> Capture "pid" Int  :> Get '[JSON]  Person
-          :<|>  "task"                          :> Get '[JSON]  TaskIDs
+type LiBroAPI =
+        "person"                                  :> Get '[JSON]  PersonIDs
+  :<|>  "person"  :> Capture "pid" Int            :> Get '[JSON]  Person
+  :<|>  "person"  :> Capture "pid" Int  :> "task" :> Get '[JSON]  TaskIDs
+  :<|>  "task"                                    :> Get '[JSON]  TaskIDs
 
 libroServer :: ServerT LiBroAPI LiBroHandler
 libroServer =     hPersonIDs
             :<|>  hPersonDetails
+            :<|>  hPersonTasks
             :<|>  hTaskIDs
   where
         hPersonIDs :: LiBroHandler PersonIDs
@@ -39,6 +42,13 @@ libroServer =     hPersonIDs
           ps <- persons <$> runAction lsData
           case M.lookup pId ps of
             Just p  -> return p
+            Nothing -> throwError err404 {errBody = "Person not found"}
+
+        hPersonTasks :: Int -> LiBroHandler TaskIDs
+        hPersonTasks pId = do
+          d <- runAction lsData
+          case M.lookup pId (persons d) of
+            Just p  -> return $ TaskIDs (tid <$> assignedTasks p (tasks d))
             Nothing -> throwError err404 {errBody = "Person not found"}
 
         hTaskIDs :: LiBroHandler TaskIDs

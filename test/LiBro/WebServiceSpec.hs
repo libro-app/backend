@@ -34,6 +34,20 @@ listings = describe "Simple data listing" $ with lws $ do
           "Person not found"
           {matchStatus = 404}
 
+    describe "tasks of a person" $ do
+      it "Correct tasks of person with 1 task" $ do
+        get "/person/1/task" `shouldRespondWith`
+          [json|{"taskIDs": [17]}|]
+          {matchStatus = 200}
+      it "Correct tasks of person with 2 task" $ do
+        get "/person/2/task" `shouldRespondWith`
+          [json|{"taskIDs": [17, 37]}|]
+          {matchStatus = 200}
+      it "404 if person does not exist" $ do
+        get "/person/42" `shouldRespondWith`
+          "Person not found"
+          {matchStatus = 404}
+
   context "Task listing endpoints" $ do
 
     describe "ID listing" $ do
