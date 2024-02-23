@@ -33,15 +33,15 @@ writeConfig c = T.unlines
 
 instance Arbitrary Config where
   arbitrary = do
-    st  <- Storage  <$> name <*> name <*> name <*> name
-    srv <- Server   <$> port
+    st  <- Storage  <$> aname <*> aname <*> aname <*> aname
+    srv <- Server   <$> aport
     return $ Config st srv
     where chars = '/' : ['a'..'z'] ++ ['A'..'Z']
-          name  = do  a   <- elements chars
+          aname = do  a   <- elements chars
                       z   <- elements chars
                       as  <- listOf $ elements (' ' : chars)
                       return (a : as ++ [z])
-          port  = elements [1024 .. 49151] -- Wikipedia "Registered port"
+          aport = elements [1024 .. 49151] -- Wikipedia "Registered port"
 
 spec :: Spec
 spec = describe "INI file configuration" $ do

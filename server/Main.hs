@@ -6,9 +6,9 @@ import Network.Wai.Handler.Warp
 
 configuredMain :: Config -> IO ()
 configuredMain cfg = do
-  let port = Conf.port $ Conf.server cfg
-  putStrLn $ "Serving LiBro backend on port " ++ show port ++ "."
-  run port (libro cfg)
+  let p = Conf.port $ Conf.server cfg
+  putStrLn $ "Serving LiBro backend on port " ++ show p ++ "."
+  run p (libro cfg)
 
 main :: IO ()
 main = readConfig >>= maybe complain configuredMain
