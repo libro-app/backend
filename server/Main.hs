@@ -1,14 +1,16 @@
 module Main where
 
-import LiBro.Config as Conf
+import LiBro.Config
+import LiBro.Control
 import LiBro.WebService
 import Network.Wai.Handler.Warp
 
 configuredMain :: Config -> IO ()
 configuredMain cfg = do
-  let p = Conf.port $ Conf.server cfg
+  let p = port $ server cfg
   putStrLn $ "Serving LiBro backend on port " ++ show p ++ "."
-  run p (libro cfg)
+  initState <- initLiBroState cfg
+  run p $ libro initState
 
 main :: IO ()
 main = readConfig >>= maybe complain configuredMain

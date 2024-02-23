@@ -51,25 +51,28 @@ initLiBroState cfg = do
   initData cfg mvb mvd
   return $ LiBroState cfg mvb mvd
 
+-- |  Type alias for actions holding a 'LiBroState' inside 'ReaderT'.
+type Action = ReaderT LiBroState IO
+
 -- |  'Config' accessor action.
-lsConfig :: ReaderT LiBroState IO Config
+lsConfig :: Action Config
 lsConfig = asks config
 
 -- |  Checks whether the system is blocked
 --    and by what type of 'Blocking' action.
-lsBlockedBy :: ReaderT LiBroState IO (Maybe Blocking)
+lsBlockedBy :: Action (Maybe Blocking)
 lsBlockedBy = do
   mvb <- asks mvBlocking
   lift $ tryTakeMVar mvb
 
 -- |  'LiBroData' accessor action.
-lsData :: ReaderT LiBroState IO LiBroData
+lsData :: Action LiBroData
 lsData = do
   mvd <- asks mvData
   lift $ readMVar mvd
 
 -- |  'initData' action.
-lsInitData :: ReaderT LiBroState IO ()
+lsInitData :: Action ()
 lsInitData = do
   cfg <- asks config
   mvb <- asks mvBlocking
@@ -77,7 +80,7 @@ lsInitData = do
   lift $ initData cfg mvb mvd
 
 -- |  'saveData' action.
-lsSaveData :: ReaderT LiBroState IO Bool
+lsSaveData :: Action Bool
 lsSaveData = do
   cfg <- asks config
   mvb <- asks mvBlocking

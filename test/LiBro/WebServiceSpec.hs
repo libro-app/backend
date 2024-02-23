@@ -3,34 +3,24 @@ module LiBro.WebServiceSpec where
 import Test.Hspec
 import Test.Hspec.Wai
 import Test.Hspec.Wai.JSON
-import Test.Hspec.Wai.QuickCheck
 
 import LiBro.Config
+import LiBro.Control
 import LiBro.WebService
 import Data.Default
-import Data.ByteString
 
 spec :: Spec
 spec = describe "RESTful JSON web service" $ do
-  helloLibro
+  personSpecs
 
-helloLibro :: Spec
-helloLibro = describe "Dummy: hello libro!" $ with (return cfgLibro) $ do
+personSpecs :: Spec
+personSpecs = describe "Person related endpoints" $ with lws $ do
 
-  describe "Yay endpoint" $ do
-    it "Respond with 200 greeting" $ do
-      get "/yay" `shouldRespondWith` "Yay!" {matchStatus = 200}
-
-  describe "Dummy person ID endpoint" $ do
+  describe "Person ID listing endpoint" $ do
     it "Respond with IDs" $ do
-      get "/hello" `shouldRespondWith`
-        [json|{"personIDs":[17,42]}|]
+      get "/person" `shouldRespondWith`
+        [json|{"personIDs": [1,2]}|]
         {matchStatus = 200}
 
-  describe "Any other endpoint" $ do
-    it "Respond with 404" $ do
-      property $ \endpoint ->
-        show endpoint /= "hello" ==>
-        get (pack endpoint) `shouldRespondWith` 404
-
-  where cfgLibro = libro $ Config def def
+  where lws = libro <$> initLiBroState cfg
+        cfg = Config (def {directory = "test/storage-files/data"}) def
