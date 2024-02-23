@@ -14,25 +14,29 @@ spec = describe "RESTful JSON web service" $ do
   listings
 
 listings :: Spec
-listings = describe "Simple data listing endpoints" $ with lws $ do
+listings = describe "Simple data listing" $ with lws $ do
 
-  describe "Person ID listing endpoint" $ do
-    it "Respond with IDs" $ do
-      get "/person" `shouldRespondWith`
-        [json|{"personIDs": [1,2]}|]
-        {matchStatus = 200}
+  context "Person listing endpoints" $ do
 
-  describe "Person details endpoint" $ do
-    it "Respond with correct details" $ do
-      get "/person/2" `shouldRespondWith`
-        [json|{"pid": 2, "name": "Baz Quux", "email": "baz@quux.com"}|]
-        {matchStatus = 200}
+    describe "ID listing" $ do
+      it "Correct IDs" $ do
+        get "/person" `shouldRespondWith`
+          [json|{"personIDs": [1,2]}|]
+          {matchStatus = 200}
 
-  describe "Task ID listing endpoint" $ do
-    it "Respond with correct IDs" $ do
-      get "/task" `shouldRespondWith`
-        [json|{"taskIDs": [17]}|]
-        {matchStatus = 200}
+    describe "details" $ do
+      it "Correct details" $ do
+        get "/person/2" `shouldRespondWith`
+          [json|{"pid": 2, "name": "Baz Quux", "email": "baz@quux.com"}|]
+          {matchStatus = 200}
+
+  context "Task listing endpoints" $ do
+
+    describe "ID listing" $ do
+      it "Correct IDs" $ do
+        get "/task" `shouldRespondWith`
+          [json|{"taskIDs": [17]}|]
+          {matchStatus = 200}
 
   where lws = libro <$> initLiBroState cfg
         cfg = Config (def {directory = "test/storage-files/data"}) def
