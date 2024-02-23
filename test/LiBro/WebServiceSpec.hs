@@ -22,5 +22,11 @@ personSpecs = describe "Person related endpoints" $ with lws $ do
         [json|{"personIDs": [1,2]}|]
         {matchStatus = 200}
 
+  describe "Person details endpoint" $ do
+    it "Respond with correct details" $ do
+      get "/person/2" `shouldRespondWith`
+        [json|{"pid": 2, "name": "Baz Quux", "email": "baz@quux.com"}|]
+        {matchStatus = 200}
+
   where lws = libro <$> initLiBroState cfg
         cfg = Config (def {directory = "test/storage-files/data"}) def

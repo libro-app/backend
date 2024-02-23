@@ -3,6 +3,7 @@ module LiBro.WebService where
 import LiBro.Control
 import LiBro.Data
 import qualified Data.Map as M
+import Data.Map ((!))
 import Data.Aeson
 import Data.Proxy
 import Servant
@@ -17,17 +18,24 @@ type LiBroHandler = ReaderT LiBroState Handler
 runAction :: Action a -> LiBroHandler a
 runAction action = ask >>= liftIO . runReaderT action
 
-type LiBroAPI = "person":> Get '[JSON]      PersonIDs
+type LiBroAPI = "person"                        :> Get '[JSON]  PersonIDs
+          :<|>  "person"  :> Capture "pid" Int  :> Get '[JSON]  Person
           :<|>  "yay"   :> Get '[PlainText] String
 
 libroServer :: ServerT LiBroAPI LiBroHandler
 libroServer =     hPersonIDs
+            :<|>  hPersonDetails
             :<|>  handleYay
   where
         hPersonIDs :: LiBroHandler PersonIDs
         hPersonIDs = do
           ps <- persons <$> runAction lsData
           return $ PersonIDs (M.keys ps)
+
+        hPersonDetails :: Int -> LiBroHandler Person
+        hPersonDetails pId = do
+          ps <- persons <$> runAction lsData
+          return $ ps ! pId
 
         handleYay :: LiBroHandler String
         handleYay = return "Yay!"
