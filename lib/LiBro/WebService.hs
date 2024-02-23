@@ -20,12 +20,10 @@ runAction action = ask >>= liftIO . runReaderT action
 
 type LiBroAPI = "person"                        :> Get '[JSON]  PersonIDs
           :<|>  "person"  :> Capture "pid" Int  :> Get '[JSON]  Person
-          :<|>  "yay"   :> Get '[PlainText] String
 
 libroServer :: ServerT LiBroAPI LiBroHandler
 libroServer =     hPersonIDs
             :<|>  hPersonDetails
-            :<|>  handleYay
   where
         hPersonIDs :: LiBroHandler PersonIDs
         hPersonIDs = do
@@ -36,9 +34,6 @@ libroServer =     hPersonIDs
         hPersonDetails pId = do
           ps <- persons <$> runAction lsData
           return $ ps ! pId
-
-        handleYay :: LiBroHandler String
-        handleYay = return "Yay!"
 
 libroApi :: Proxy LiBroAPI
 libroApi = Proxy
