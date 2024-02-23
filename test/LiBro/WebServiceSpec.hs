@@ -28,5 +28,11 @@ listings = describe "Simple data listing endpoints" $ with lws $ do
         [json|{"pid": 2, "name": "Baz Quux", "email": "baz@quux.com"}|]
         {matchStatus = 200}
 
+  describe "Task ID listing endpoint" $ do
+    it "Respond with correct IDs" $ do
+      get "/task" `shouldRespondWith`
+        [json|{"taskIDs": [17]}|]
+        {matchStatus = 200}
+
   where lws = libro <$> initLiBroState cfg
         cfg = Config (def {directory = "test/storage-files/data"}) def

@@ -4,14 +4,17 @@ import LiBro.Control
 import LiBro.Data
 import qualified Data.Map as M
 import Data.Map ((!))
+import Data.Tree
 import Data.Aeson
 import Data.Proxy
 import Servant
 import Control.Monad.Reader
 import GHC.Generics
 
-newtype PersonIDs = PersonIDs {personIDs :: [Int]} deriving Generic
+newtype PersonIDs = PersonIDs {personIDs  :: [Int]} deriving Generic
+newtype TaskIDs   = TaskIDs   {taskIDs    :: [Int]} deriving Generic
 instance ToJSON PersonIDs
+instance ToJSON TaskIDs
 
 type LiBroHandler = ReaderT LiBroState Handler
 
@@ -20,10 +23,12 @@ runAction action = ask >>= liftIO . runReaderT action
 
 type LiBroAPI = "person"                        :> Get '[JSON]  PersonIDs
           :<|>  "person"  :> Capture "pid" Int  :> Get '[JSON]  Person
+          :<|>  "task"                          :> Get '[JSON]  TaskIDs
 
 libroServer :: ServerT LiBroAPI LiBroHandler
 libroServer =     hPersonIDs
             :<|>  hPersonDetails
+            :<|>  hTaskIDs
   where
         hPersonIDs :: LiBroHandler PersonIDs
         hPersonIDs = do
@@ -34,6 +39,11 @@ libroServer =     hPersonIDs
         hPersonDetails pId = do
           ps <- persons <$> runAction lsData
           return $ ps ! pId
+
+        hTaskIDs :: LiBroHandler TaskIDs
+        hTaskIDs = do
+          ts <- tasks <$> runAction lsData
+          return $ TaskIDs (tid . rootLabel <$> ts)
 
 libroApi :: Proxy LiBroAPI
 libroApi = Proxy
