@@ -10,51 +10,54 @@ import Servant
 import Control.Monad.Reader
 import GHC.Generics
 
-newtype PersonIDs = PersonIDs {personIDs  :: [Int]} deriving Generic
-newtype TaskIDs   = TaskIDs   {taskIDs    :: [Int]} deriving Generic
-instance ToJSON PersonIDs
-instance ToJSON TaskIDs
-
 type LiBroHandler = ReaderT LiBroState Handler
 
 runAction :: Action a -> LiBroHandler a
 runAction action = ask >>= liftIO . runReaderT action
 
+data PersonDetails = PersonDetails
+  { person      :: Person
+  , personTasks :: [Task]
+  } deriving Generic
+instance ToJSON PersonDetails
+
+-- JSON-friendly rewrite of Forest/Tree, their ToJSON instance is weird
+type TaskForest = [TaskTree]
+data TaskTree   = TaskTree
+  { task        :: Task
+  , subTasks    :: TaskForest
+  } deriving Generic
+instance ToJSON TaskTree
+
 type LiBroAPI =
-        "person"                                  :> Get '[JSON]  PersonIDs
-  :<|>  "person"  :> Capture "pid" Int            :> Get '[JSON]  Person
-  :<|>  "person"  :> Capture "pid" Int  :> "task" :> Get '[JSON]  TaskIDs
-  :<|>  "task"                                    :> Get '[JSON]  TaskIDs
+        "person"                        :> Get '[JSON]  [Person]
+  :<|>  "person"  :> Capture "pid" Int  :> Get '[JSON]  PersonDetails
+  :<|>  "task"                          :> Get '[JSON]  [Task]
+  :<|>  "task"    :> "tree"             :> Get '[JSON]  TaskForest
 
 libroServer :: ServerT LiBroAPI LiBroHandler
-libroServer =     hPersonIDs
+libroServer =     hPersonList
             :<|>  hPersonDetails
-            :<|>  hPersonTasks
-            :<|>  hTaskIDs
+            :<|>  hTaskTopLevelList
+            :<|>  hTaskFullForest
   where
-        hPersonIDs :: LiBroHandler PersonIDs
-        hPersonIDs = do
-          ps <- persons <$> runAction lsData
-          return $ PersonIDs (M.keys ps)
+        hPersonList :: LiBroHandler [Person]
+        hPersonList = M.elems . persons <$> runAction lsData
 
-        hPersonDetails :: Int -> LiBroHandler Person
+        hPersonDetails :: Int -> LiBroHandler PersonDetails
         hPersonDetails pId = do
-          ps <- persons <$> runAction lsData
-          case M.lookup pId ps of
-            Just p  -> return p
-            Nothing -> throwError err404 {errBody = "Person not found"}
-
-        hPersonTasks :: Int -> LiBroHandler TaskIDs
-        hPersonTasks pId = do
           d <- runAction lsData
           case M.lookup pId (persons d) of
-            Just p  -> return $ TaskIDs (tid <$> assignedTasks p (tasks d))
+            Just p  ->  let ts = assignedTasks p (tasks d)
+                        in  return $ PersonDetails p ts
             Nothing -> throwError err404 {errBody = "Person not found"}
 
-        hTaskIDs :: LiBroHandler TaskIDs
-        hTaskIDs = do
-          ts <- tasks <$> runAction lsData
-          return $ TaskIDs (tid . rootLabel <$> ts)
+        hTaskTopLevelList :: LiBroHandler [Task]
+        hTaskTopLevelList = map rootLabel . tasks <$> runAction lsData
+
+        hTaskFullForest :: LiBroHandler TaskForest
+        hTaskFullForest = map convert . tasks <$> runAction lsData
+          where convert (Node t sts) = TaskTree t (convert <$> sts)
 
 libroApi :: Proxy LiBroAPI
 libroApi = Proxy
