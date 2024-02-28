@@ -29,6 +29,12 @@ data TaskTree   = TaskTree
   } deriving Generic
 instance ToJSON TaskTree
 
+convertTaskTree :: Tree Task -> TaskTree
+convertTaskTree (Node t ts) = TaskTree t (convertTasksForest ts)
+
+convertTasksForest :: Tasks -> TaskForest
+convertTasksForest = map convertTaskTree
+
 type LiBroAPI =
         "person"                        :> Get '[JSON]  [Person]
   :<|>  "person"  :> Capture "pid" Int  :> Get '[JSON]  PersonDetails
@@ -56,8 +62,7 @@ libroServer =     hPersonList
         hTaskTopLevelList = map rootLabel . tasks <$> runAction lsData
 
         hTaskFullForest :: LiBroHandler TaskForest
-        hTaskFullForest = map convert . tasks <$> runAction lsData
-          where convert (Node t sts) = TaskTree t (convert <$> sts)
+        hTaskFullForest = convertTasksForest . tasks <$> runAction lsData
 
 libroApi :: Proxy LiBroAPI
 libroApi = Proxy
