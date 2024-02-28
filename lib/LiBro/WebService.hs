@@ -2,6 +2,7 @@ module LiBro.WebService where
 
 import LiBro.Control
 import LiBro.Data
+import LiBro.Util
 import qualified Data.Map as M
 import Data.Tree
 import Data.Aeson
@@ -40,12 +41,14 @@ type LiBroAPI =
   :<|>  "person"  :> Capture "pid" Int  :> Get '[JSON]  PersonDetails
   :<|>  "task"                          :> Get '[JSON]  [Task]
   :<|>  "task"    :> "tree"             :> Get '[JSON]  TaskForest
+  :<|>  "task"    :> Capture "tid" Int  :> Get '[JSON]  TaskTree
 
 libroServer :: ServerT LiBroAPI LiBroHandler
 libroServer =     hPersonList
             :<|>  hPersonDetails
             :<|>  hTaskTopLevelList
             :<|>  hTaskFullForest
+            :<|>  hTaskDetails
   where
         hPersonList :: LiBroHandler [Person]
         hPersonList = M.elems . persons <$> runAction lsData
@@ -63,6 +66,13 @@ libroServer =     hPersonList
 
         hTaskFullForest :: LiBroHandler TaskForest
         hTaskFullForest = convertTasksForest . tasks <$> runAction lsData
+
+        hTaskDetails :: Int -> LiBroHandler TaskTree
+        hTaskDetails tId = do
+          result <- findSubtree ((== tId) . tid) . tasks <$> runAction lsData
+          case result of
+            Just tree -> return $ convertTaskTree tree
+            Nothing   -> throwError err404 {errBody = "Task not found"}
 
 libroApi :: Proxy LiBroAPI
 libroApi = Proxy

@@ -84,5 +84,42 @@ listings = describe "Simple data listing" $ with lws $ do
           ]|]
           {matchStatus = 200}
 
+    describe "Subforest of a given task" $ do
+
+      it "Task is a leaf" $ do
+        get "/task/37" `shouldRespondWith`
+          [json|{
+            "task": {"tid": 37, "title": "t37", "description": "d37", "assignees": [
+                {"pid": 2,  "name": "Baz Quux", "email": "baz@quux.com"}
+            ]},
+            "subTasks": []
+          }|]
+          {matchStatus = 200}
+
+      it "Task is an inner node" $ do
+        get "/task/17" `shouldRespondWith`
+          [json|{
+            "task": {"tid": 17, "title": "t17", "description": "d17", "assignees": [
+              {"pid": 1,  "name": "Foo Bar",  "email": "foo@bar.com"},
+              {"pid": 2,  "name": "Baz Quux", "email": "baz@quux.com"}
+            ]},
+            "subTasks": [
+              { "task": {"tid": 37, "title": "t37", "description": "d37", "assignees": [
+                  {"pid": 2,  "name": "Baz Quux", "email": "baz@quux.com"}
+                ]},
+                "subTasks": []
+              },
+              { "task": {"tid": 42, "title": "t42", "description": "d42", "assignees": []},
+                "subTasks": []
+              }
+            ]
+          }|]
+          {matchStatus = 200}
+
+      it "404 if task does not exist" $ do
+        get "/task/666" `shouldRespondWith`
+          "Task not found"
+          {matchStatus = 404}
+
   where lws = libro <$> initLiBroState cfg
         cfg = Config (def {directory = "test/storage-files/data"}) def
