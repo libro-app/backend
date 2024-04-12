@@ -30,8 +30,8 @@ assigneesOfTasks = describe "Assignees of tasks" $ do
                     , Task 3 "3t" "3d" []
                     ]
         taskF     = [ Node (myTasks !! 0) [Node (myTasks !! 1) []]
-                  , Node (myTasks !! 2) []
-                  ]
+                    , Node (myTasks !! 2) []
+                    ]
     it "Correct tasks for person 1" $
       tid <$> assignedTasks (myPersons !! 0) taskF `shouldBe` [1, 2]
     it "Correct tasks for person 2" $
