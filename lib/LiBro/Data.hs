@@ -50,7 +50,7 @@ type Tasks = Forest Task
 
 -- |  Find all 'Task's assigned to a given 'Person'.
 assignedTasks :: Person -> Tasks -> [Task]
-assignedTasks p = filter ((p `elem`) . assignees) . concatMap flatten
+assignedTasks p = concatMap (filter ((p `elem`) . assignees) . flatten)
 
 -- |  Complete LiBro state in one type
 data LiBroData = LBS

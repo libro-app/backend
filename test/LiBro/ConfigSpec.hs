@@ -20,22 +20,28 @@ import System.IO.Silently
 writeConfig :: Config -> Text
 writeConfig c = T.unlines
   [ "[storage]"
-  , "directory = "      <> T.pack (directory s)
-  , "person-file = "    <> T.pack (personFile s)
-  , "tasks-file = "     <> T.pack (tasksFile s)
-  , "tracking-file = "  <> T.pack (trackingFile s)
+  , "directory = "      <> T.pack (directory    st)
+  , "person-file = "    <> T.pack (personFile   st)
+  , "tasks-file = "     <> T.pack (tasksFile    st)
+  , "tracking-file = "  <> T.pack (trackingFile st)
+  , ""
+  , "[server]"
+  , "port = "           <> T.pack (show $ port srv)
   ] <> "\n"
-  where s = storage c
+  where st  = storage c
+        srv = server c
 
 instance Arbitrary Config where
   arbitrary = do
-    st <- Storage <$> name <*> name <*> name <*> name
-    return $ Config st
-    where chars = [choose ('a','z'), choose ('A','Z'), return '/']
-          name  = do  a   <- oneof chars
-                      z   <- oneof chars
-                      as  <- listOf $ oneof (return ' ' : chars)
+    st  <- Storage  <$> aname <*> aname <*> aname <*> aname
+    srv <- Server   <$> aport
+    return $ Config st srv
+    where chars = '/' : ['a'..'z'] ++ ['A'..'Z']
+          aname = do  a   <- elements chars
+                      z   <- elements chars
+                      as  <- listOf $ elements (' ' : chars)
                       return (a : as ++ [z])
+          aport = elements [1024 .. 49151] -- Wikipedia "Registered port"
 
 spec :: Spec
 spec = describe "INI file configuration" $ do
@@ -51,6 +57,9 @@ defaultConfig = describe "Default config values" $ do
     it "person file"    $ personFile    st `shouldBe` "persons.xlsx"
     it "tasks file"     $ tasksFile     st `shouldBe` "tasks.xlsx"
     it "tracking file"  $ trackingFile  st `shouldBe` "tracking.xlsx"
+  describe "Server configuration" $ do
+    let srv = server dc
+    it "port" $ port srv `shouldBe` 8080
   where dc = def :: Config
 
 parsing :: Spec
@@ -58,7 +67,9 @@ parsing = describe "Configuration parsing" $ do
 
   context "With simple values" $
     it "parse correct simple values" $ do
-      let simple = Config $ Storage "foo" "bar" "baz" "quux"
+      let simple = Config
+                    (Storage "foo" "bar" "baz" "quux")
+                    (Server 1742)
       parseConfig (writeConfig simple) `shouldBe` Right simple
 
   context "With invalid ini input" $
@@ -73,7 +84,9 @@ reading :: Spec
 reading = describe "Reading configuration from file" $ do
 
   context "With existing test config file" $ do
-    let simple = Config $ Storage "bar" "baz" "quux" "quuux"
+    let simple = Config
+                  (Storage "bar" "baz" "quux" "quuux")
+                  (Server 4217)
     config <- runIO $ withSystemTempFile "config.ini" $ \fp h -> do
       hPutStr h (T.unpack $ writeConfig simple) >> hClose h
       readConfigFrom fp

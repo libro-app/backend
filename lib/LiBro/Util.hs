@@ -2,9 +2,10 @@
 --    in more than one place.
 module LiBro.Util
   (
-  -- * Tree building
+  -- * Tree utilities
     ParentList
   , readForest
+  , findSubtree
   -- * Counting monad transformer
   , CountingT
   , next
@@ -58,6 +59,13 @@ readForest pairs =
   where fill cs n = Node n $ case M.lookup n cs of
                               Nothing -> []; Just [] -> []
                               Just xs -> fill cs <$> sort xs
+
+-- |  Find the first matching subtree of a forest
+findSubtree :: (a -> Bool) -> Forest a -> Maybe (Tree a)
+findSubtree p = asum . map findTree
+  where findTree t@(Node x cs)
+          | p x       = Just t
+          | otherwise = findSubtree p cs
 
 -- |  Simple monad transformer that allows to read an increasing 'Int'.
 type CountingT m = StateT Int m

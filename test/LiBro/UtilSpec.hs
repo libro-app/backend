@@ -18,6 +18,7 @@ import System.IO.Temp
 spec :: Spec
 spec = describe "Helper stuff" $ do
   forestFromParentList
+  findInForest
   countingT
   xlsx
   guarding
@@ -34,6 +35,31 @@ forestFromParentList = describe "Read Forest from parent list" $ do
         [ Node 17 [ Node 34 [], Node 51 []]
         , Node 42 [ Node 84 [ Node (168 :: Int) [] ]]
         ]
+
+findInForest :: Spec
+findInForest = describe "Find matching subtrees in a forest" $ do
+  let forest  = [ Node 2 [ Node 4 [Node 8 []], Node 6 [Node 12 [Node 24 []]]]
+                , Node 3 [ Node 6 [Node 12 []], Node 9 [Node 18 [], Node 27 []]]
+                , Node 5 [ Node 10 []]
+                ] :: Forest Int
+  -- runIO $ putStr $ drawForest $ map (fmap show) forest
+
+  context "Nothing to find" $ do
+    it "Get Nothing from empty forest" $
+      findSubtree even ([] :: Forest Int) `shouldBe` Nothing
+    it "Nothing matches" $
+      findSubtree (> 42) forest `shouldBe` Nothing
+
+  context "Finding subtrees" $ do
+    it "Catch-all predicate: first tree" $
+      findSubtree (const True) forest `shouldBe` Just (head forest)
+    it "Find the first '6' subtree" $
+      findSubtree (== 6) forest `shouldBe` Just (Node 6 [Node 12 [Node 24[]]])
+    it "Find the first odd subtree" $
+      findSubtree odd forest `shouldBe`
+        Just ( Node 3 [ Node 6 [Node 12 []]
+                      , Node 9 [Node 18 [], Node 27 []]
+                      ])
 
 countingT :: Spec
 countingT = describe "The CountingT 'monad transformer'" $ do
