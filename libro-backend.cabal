@@ -33,8 +33,10 @@ common consumer
 library
   import:             basic
   default-extensions: OverloadedStrings
+                    , GeneralizedNewtypeDeriving
                     , DeriveGeneric
-  exposed-modules:    LiBro.Config
+  exposed-modules:    LiBro.Base
+                    , LiBro.Config
                     , LiBro.Data
                     , LiBro.Data.Storage
                     , LiBro.Data.SafeText
