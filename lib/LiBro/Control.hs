@@ -22,7 +22,7 @@ initData config blocking libroData = do
   _ <- takeMVar blocking
   return ()
 
--- |  Try to store shared state data. Expects the given blocking MVar
+-- |  Try to store shared state data. Expects the given blocking 'MVar'
 --    to be empty. Iff not, returns 'False'.
 saveData :: Config -> MVar Blocking -> MVar LiBroData -> IO Bool
 saveData config blocking libroData = do
