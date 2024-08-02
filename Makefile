@@ -1,4 +1,4 @@
-.PHONY: all build warnings test test_only doc stats
+.PHONY: all build warnings test test_only doc serve stats
 
 all: build test doc stats
 
@@ -16,6 +16,9 @@ test_only:
 
 doc:
 	cabal haddock --haddock-hyperlinked-source --haddock-html-location='https://hackage.haskell.org/package/$$pkg-$$version/docs'
+
+serve:
+	cabal run libro-backend
 
 stats:
 	find lib -name '*.hs' -not -path "./dist-newstyle/*" | sort | xargs wc -l

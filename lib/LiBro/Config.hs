@@ -18,13 +18,22 @@ data StorageConfig = Storage
 instance Default StorageConfig where
   def = Storage "data-storage" "persons.xlsx" "tasks.xlsx" "tracking.xlsx"
 
+-- |  Configuration of server details
+data ServerConfig = Server
+  { port :: Int
+  } deriving (Eq, Show)
+
+instance Default ServerConfig where
+  def = Server 8080
+
 -- |  Global settings.
 data Config = Config
   { storage :: StorageConfig
+  , server  :: ServerConfig
   } deriving (Eq, Show)
 
 instance Default Config where
-  def = Config def
+  def = Config def def
 
 -- |  Parses a 'Config' value from a given 'Text'
 --    or gives a parsing error message.
@@ -35,7 +44,9 @@ parseConfig = flip parseIniFile $ do
             <*> fieldOf "person-file"   string
             <*> fieldOf "tasks-file"    string
             <*> fieldOf "tracking-file" string
-  return $ Config st
+  srv <- section "server" $
+    Server <$> fieldOf "port" number
+  return $ Config st srv
 
 -- |  Reads a 'Config' value from @config.ini@.
 --    Prints parsing error messages to @STDERR@ when failing.

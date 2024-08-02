@@ -35,12 +35,15 @@ library
   default-extensions: OverloadedStrings
                     , GeneralizedNewtypeDeriving
                     , DeriveGeneric
+                    , DataKinds
+                    , TypeOperators
   exposed-modules:    LiBro.Base
                     , LiBro.Config
                     , LiBro.Data
                     , LiBro.Data.Storage
                     , LiBro.Data.SafeText
                     , LiBro.Control
+                    , LiBro.WebService
                     , LiBro.Util
   build-depends:      aeson
                     , attoparsec
@@ -55,6 +58,8 @@ library
                     , mtl
                     , process
                     , QuickCheck
+                    , servant
+                    , servant-server
                     , temporary
                     , text
                     , unordered-containers
@@ -65,11 +70,13 @@ executable libro-backend
   import:             consumer
   main-is:            Main.hs
   build-depends:      libro-backend
-  hs-source-dirs:     app
+                    , warp
+  hs-source-dirs:     server
 
 test-suite libro-backend-test
   import:             consumer
   default-extensions: OverloadedStrings
+                    , QuasiQuotes
                     , DeriveGeneric
   type:               exitcode-stdio-1.0
   hs-source-dirs:     test
@@ -80,10 +87,13 @@ test-suite libro-backend-test
                     , LiBro.Data.StorageSpec
                     , LiBro.Data.SafeTextSpec
                     , LiBro.ControlSpec
+                    , LiBro.WebServiceSpec
                     , LiBro.UtilSpec
   main-is:            run-all-tests.hs
   build-depends:      libro-backend
                     , hspec
+                    , hspec-wai
+                    , hspec-wai-json
                     , QuickCheck
                     , quickcheck-text
                     , generic-arbitrary
@@ -101,3 +111,4 @@ test-suite libro-backend-test
                     , text
                     , transformers
                     , vector
+                    , wai
