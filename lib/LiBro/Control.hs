@@ -1,6 +1,7 @@
 -- |  Controlling the LiBro data flow.
 module LiBro.Control where
 
+import LiBro.Base
 import LiBro.Config
 import LiBro.Data
 import LiBro.Data.Storage
@@ -16,24 +17,25 @@ data Blocking
 
 -- |  Initially load data and put it into the shared state.
 --    Expects the given 'MVar' to be empty.
-initData :: Config -> MVar Blocking -> MVar LiBroData -> IO ()
-initData cfg blocking libroData = do
-  putMVar blocking Reading
-  putMVar libroData =<< loadData cfg
-  _ <- takeMVar blocking
+initData :: MVar Blocking -> MVar LiBroData -> LiBro ()
+initData blocking libroData = do
+  liftIO $ putMVar blocking Reading
+  ld <- loadData
+  _ <- liftIO $ putMVar libroData ld
+  _ <- liftIO $ takeMVar blocking
   return ()
 
--- |  Try to store shared state data. Expects the given blocking MVar
+-- |  Try to store shared state data. Expects the given blocking 'MVar'
 --    to be empty. Iff not, returns 'False'.
-saveData :: Config -> MVar Blocking -> MVar LiBroData -> IO Bool
-saveData cfg blocking libroData = do
-  isBlocked <- not <$> isEmptyMVar blocking
+saveData :: MVar Blocking -> MVar LiBroData -> LiBro Bool
+saveData blocking libroData = do
+  isBlocked <- not <$> liftIO (isEmptyMVar blocking)
   if isBlocked
     then return False
     else do
-      putMVar blocking Writing
-      storeData cfg =<< readMVar libroData
-      _ <- takeMVar blocking
+      liftIO $ putMVar blocking Writing
+      storeData =<< liftIO (readMVar libroData)
+      _ <- liftIO $ takeMVar blocking
       return True
 
 -- |  Shared libro system state to access data any time.
@@ -44,11 +46,12 @@ data LiBroState = LiBroState
   }
 
 -- |  Initialization of a 'LiBroState'.
-initLiBroState :: Config -> IO LiBroState
-initLiBroState cfg = do
-  mvb <- newEmptyMVar
-  mvd <- newEmptyMVar
-  initData cfg mvb mvd
+initLiBroState :: LiBro LiBroState
+initLiBroState = do
+  mvb <- liftIO newEmptyMVar
+  mvd <- liftIO newEmptyMVar
+  initData mvb mvd
+  cfg <- ask
   return $ LiBroState cfg mvb mvd
 
 -- |  Type alias for actions holding a 'LiBroState' inside 'ReaderT'.
@@ -77,7 +80,7 @@ lsInitData = do
   cfg <- asks config
   mvb <- asks mvBlocking
   mvd <- asks mvData
-  lift $ initData cfg mvb mvd
+  lift $ runLiBro cfg $ initData mvb mvd
 
 -- |  'saveData' action.
 lsSaveData :: Action Bool
@@ -85,4 +88,4 @@ lsSaveData = do
   cfg <- asks config
   mvb <- asks mvBlocking
   mvd <- asks mvData
-  lift $ saveData cfg mvb mvd
+  lift $ runLiBro cfg $ saveData mvb mvd

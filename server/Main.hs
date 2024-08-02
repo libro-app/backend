@@ -1,5 +1,6 @@
 module Main where
 
+import LiBro.Base
 import LiBro.Config
 import LiBro.Control
 import LiBro.WebService
@@ -9,7 +10,7 @@ configuredMain :: Config -> IO ()
 configuredMain cfg = do
   let p = port $ server cfg
   putStrLn $ "Serving LiBro backend on port " ++ show p ++ "."
-  initState <- initLiBroState cfg
+  initState <- runLiBro cfg initLiBroState
   run p $ libro initState
 
 main :: IO ()

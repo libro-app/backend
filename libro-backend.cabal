@@ -10,7 +10,7 @@ license:              MIT
 license-file:         LICENSE
 author:               Mirko Westermeier
 maintainer:           mirko@westermeier.de
-copyright:            (c) 2023 Mirko Westermeier
+copyright:            (c) 2023-2024 Mirko Westermeier
 
 source-repository head
   type:     git
@@ -33,10 +33,12 @@ common consumer
 library
   import:             basic
   default-extensions: OverloadedStrings
+                    , GeneralizedNewtypeDeriving
                     , DeriveGeneric
                     , DataKinds
                     , TypeOperators
-  exposed-modules:    LiBro.Config
+  exposed-modules:    LiBro.Base
+                    , LiBro.Config
                     , LiBro.Data
                     , LiBro.Data.Storage
                     , LiBro.Data.SafeText

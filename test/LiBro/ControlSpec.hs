@@ -2,6 +2,7 @@ module LiBro.ControlSpec where
 
 import Test.Hspec
 
+import LiBro.Base
 import LiBro.Config
 import LiBro.Data
 import LiBro.Data.Storage
@@ -20,14 +21,14 @@ dataInitialization :: Spec
 dataInitialization = describe "Blocking data loading" $ do
 
   context "With simple data files" $ do
-    let cfg = def { storage = def { directory = "test/storage-files/data" }}
-    expectedData  <- runIO $ loadData cfg
+    let config = def { storage = def { directory = "test/storage-files/data" }}
+    expectedData  <- runIO $ runLiBro config loadData
     blocking      <- runIO $ newEmptyMVar
     libroData     <- runIO $ newEmptyMVar
     (beb, bed, aeb, aned, ld) <- runIO $ do
       beforeEmptyBlocking <- isEmptyMVar blocking
       beforeEmptyData     <- isEmptyMVar libroData
-      initData cfg blocking libroData
+      runLiBro config $ initData blocking libroData
       afterEmptyBlocking  <- isEmptyMVar blocking
       afterNonEmptyData   <- isEmptyMVar libroData
       loadedData          <- readMVar libroData
@@ -57,21 +58,21 @@ dataStorage = describe "Storing complete LiBro data" $ do
     blocking  <- runIO $ newMVar Reading
     libroData <- runIO $ newMVar ldata
     rv <- runIO $ withSystemTempDirectory "storage" $ \tdir -> do
-      let conf = def { storage = def { directory = tdir }}
-      saveData conf blocking libroData
+      let config = def { storage = def { directory = tdir }}
+      runLiBro config $ saveData blocking libroData
     it "Saving returns False" $ rv `shouldBe` False
 
   context "Manual saving of simple data" $ do
     blocking  <- runIO $ newEmptyMVar
     libroData <- runIO $ newMVar ldata
     testData  <- runIO $ withSystemTempDirectory "storage" $ \tdir -> do
-      let conf = def { storage = def { directory = tdir }}
+      let config = def { storage = def { directory = tdir }}
       beforeEmptyBlocking <- isEmptyMVar blocking
       beforeLibroData     <- readMVar libroData
-      returnValue         <- saveData conf blocking libroData
+      returnValue         <- runLiBro config $ saveData blocking libroData
       afterEmptyBlocking  <- isEmptyMVar blocking
       afterLibroData      <- readMVar libroData
-      storedData          <- loadData conf
+      storedData          <- runLiBro config loadData
       return
         ( beforeEmptyBlocking
         , beforeLibroData

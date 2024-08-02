@@ -4,6 +4,7 @@ import Test.Hspec
 import Test.Hspec.Wai
 import Test.Hspec.Wai.JSON
 
+import LiBro.Base
 import LiBro.Config
 import LiBro.Control
 import LiBro.WebService
@@ -121,5 +122,5 @@ listings = describe "Simple data listing" $ with lws $ do
           "Task not found"
           {matchStatus = 404}
 
-  where lws = libro <$> initLiBroState cfg
+  where lws = libro <$> runLiBro cfg initLiBroState
         cfg = Config (def {directory = "test/storage-files/data"}) def
