@@ -18,6 +18,7 @@ module LiBro.Data.Storage
   , loadData
   ) where
 
+import LiBro.Base
 import LiBro.Config
 import LiBro.Data
 import LiBro.Data.SafeText
@@ -28,6 +29,7 @@ import qualified Data.Map as M
 import Data.Tree
 import Data.Csv
 import qualified Data.ByteString.Char8 as B
+import Control.Monad.Reader
 import GHC.Generics
 import System.FilePath
 import System.Directory
@@ -97,56 +99,55 @@ taskRecordsToTasks pmap trs =
           }
 
 -- |  Store 'Person's at the configured storage space
---    via 'Config'.
-storePersons :: Config -> Persons -> IO ()
-storePersons conf pmap = do
-  let sconf = storage conf
-      fp    = directory sconf </> personFile sconf
-  storeAsXlsx fp $ M.elems pmap
+storePersons :: Persons -> LiBro ()
+storePersons pmap = do
+  sconf <- asks storage
+  let fp = directory sconf </> personFile sconf
+  liftIO $ storeAsXlsx fp $ M.elems pmap
 
--- |  Load a list of 'Person's from the configured storage space
---    via 'Config'. Returns empty data if no input file was found.
-loadPersons :: Config -> IO Persons
-loadPersons conf = do
-  let sconf = storage conf
-      fp    = directory sconf </> personFile sconf
-  exists <- doesFileExist fp
+-- |  Load a list of 'Person's from the configured storage space.
+--    Returns empty data if no input file was found.
+loadPersons :: LiBro Persons
+loadPersons = do
+  sconf <- asks storage
+  let fp = directory sconf </> personFile sconf
+  exists <- liftIO $ doesFileExist fp
   if not exists then return M.empty
     else do
-      Right prs <- loadFromXlsx fp
+      Right prs <- liftIO $ loadFromXlsx fp
       return $ personMap prs
 
--- |  Store 'Tasks' at the configured storage space via 'Config'.
-storeTasks :: Config -> Tasks -> IO ()
-storeTasks conf ts = do
-  let sconf = storage conf
-      fp    = directory sconf </> tasksFile sconf
-  storeAsXlsx fp $ tasksToTaskRecords ts
+-- |  Store 'Tasks' at the configured storage space.
+storeTasks :: Tasks -> LiBro ()
+storeTasks ts = do
+  sconf <- asks storage
+  let fp = directory sconf </> tasksFile sconf
+  liftIO $ storeAsXlsx fp $ tasksToTaskRecords ts
 
--- |  Load 'Tasks' from the configured storage space via 'Config'.
+-- |  Load 'Tasks' from the configured storage space.
 --    Needs an additional 'Data.Map.Map' to find 'Person's for given
 --    person ids ('Int'). Returns empty data if no input file was found.
-loadTasks :: Config -> Persons -> IO Tasks
-loadTasks conf pmap = do
-  let sconf = storage conf
-      fp    = directory sconf </> tasksFile sconf
-  exists <- doesFileExist fp
+loadTasks :: Persons -> LiBro Tasks
+loadTasks pmap = do
+  sconf <- asks storage
+  let fp = directory sconf </> tasksFile sconf
+  exists <- liftIO $ doesFileExist fp
   if not exists then return []
     else do
-      Right records <- loadFromXlsx fp
+      Right records <- liftIO $ loadFromXlsx fp
       return $ taskRecordsToTasks pmap records
 
--- |  Store a complete dataset at the 'Config'ured file system
+-- |  Store a complete dataset at the configured file system
 --    locations.
-storeData :: Config -> LiBroData -> IO ()
-storeData conf ld = do
-  storePersons  conf (persons ld)
-  storeTasks    conf (tasks ld)
+storeData :: LiBroData -> LiBro ()
+storeData ld = do
+  storePersons  $ persons ld
+  storeTasks    $ tasks ld
 
--- |  Load a complete dataset from the 'Config'ured file system
+-- |  Load a complete dataset from the configured file system
 --    locations. Returns empty data if no input files were found.
-loadData :: Config -> IO LiBroData
-loadData conf = do
-  pmap <- loadPersons conf
-  ts   <- loadTasks   conf pmap
+loadData :: LiBro LiBroData
+loadData = do
+  pmap <- loadPersons
+  ts   <- loadTasks pmap
   return $ LBS pmap ts
