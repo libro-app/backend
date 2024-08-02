@@ -7,6 +7,7 @@ import Test.Hspec.QuickCheck
 import Test.QuickCheck.Arbitrary.Generic
 import LiBro.TestUtil
 
+import LiBro.Base
 import LiBro.Config
 import LiBro.Data
 import LiBro.Data.Storage
@@ -133,7 +134,8 @@ personStorage = describe "XLSX storage of Person data" $ do
 
   describe "Loading without a file" $ do
     result <- runIO $ withSystemTempDirectory "person-storage" $ \tdir -> do
-      loadPersons $ def { storage = def { directory = tdir }}
+      let config = def { storage = def { directory = tdir }}
+      runLiBro config loadPersons 
     it "Empty Person map" $
       result `shouldBe` M.empty
 
@@ -142,8 +144,7 @@ personStorage = describe "XLSX storage of Person data" $ do
       forAll genPersons $ \pmap -> ioProperty $ do
         withSystemTempDirectory "person-storage" $ \tdir -> do
           let config = def { storage = def { directory = tdir }}
-          storePersons config pmap
-          loadedPersons <- loadPersons config
+          loadedPersons <- runLiBro config $ storePersons pmap >> loadPersons
           return $ loadedPersons === pmap
 
 taskStorage :: Spec
@@ -151,7 +152,8 @@ taskStorage = describe "XLSX storage of Task data" $ do
 
   describe "Loading without a file" $ do
     result <- runIO $ withSystemTempDirectory "task-storage" $ \tdir -> do
-      loadTasks (def { storage = def { directory = tdir }}) M.empty
+      let config = def { storage = def { directory = tdir }}
+      runLiBro config $ loadTasks M.empty
     it "Empty task list" $
       result `shouldBe` []
 
@@ -170,16 +172,14 @@ taskStorage = describe "XLSX storage of Task data" $ do
   describe "Storing empty data" $ do
     loadedTasks <- runIO $ withSystemTempDirectory "task-storage" $ \tdir -> do
       let config = def { storage = def { directory = tdir }}
-      storeTasks config []
-      loadTasks config pmap
+      runLiBro config $ storeTasks [] >> loadTasks pmap
     it "Got empty task forest" $
       loadedTasks `shouldBe` []
 
   describe "Storing some task data" $ do
     loadedTasks <- runIO $ withSystemTempDirectory "task-storage" $ \tdir -> do
       let config = def { storage = def { directory = tdir }}
-      storeTasks config ts
-      loadTasks config pmap
+      runLiBro config $ storeTasks ts >> loadTasks pmap
     it "Got the right task forest" $
       loadedTasks `shouldBe` ts
 
@@ -200,7 +200,7 @@ dataStorage = describe "Complete dataset" $ do
                     ]
                   ]
     let conf = def { storage = def { directory = "test/storage-files/data" }}
-    (LBS loadedPersons loadedTasks) <- runIO $ loadData conf
+    (LBS loadedPersons loadedTasks) <- runIO $ runLiBro conf loadData
     it "Load correct persons" $
       loadedPersons `shouldBe` personMap pmap
     it "Load correct task forest" $
@@ -212,7 +212,6 @@ dataStorage = describe "Complete dataset" $ do
         forAll genPersonsTasks $ \d ->
           ioProperty $ do
             withSystemTempDirectory "storage" $ \tdir -> do
-              let conf = def { storage = def { directory = tdir }}
-              storeData conf d
-              loadedData <- loadData conf
+              let config = def { storage = def { directory = tdir }}
+              loadedData <- runLiBro config $ storeData d >> loadData
               return $ loadedData `shouldBe` d
