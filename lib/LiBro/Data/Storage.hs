@@ -115,7 +115,9 @@ loadPersons = do
       mprs <- loadFromXlsx fp
       case mprs of
         Right prs -> return $ personMap prs
-        Left e    -> fail e
+        Left e    -> do
+          logError "XLSX persons loader" e
+          fail e
 
 -- |  Store 'Tasks' at the configured storage space.
 storeTasks :: MonadLiBro m => Tasks -> m ()
@@ -137,7 +139,9 @@ loadTasks pmap = do
       mrecords <- loadFromXlsx fp
       case mrecords of
         Right records -> return $ taskRecordsToTasks pmap records
-        Left e        -> fail e
+        Left e        -> do
+          logError "XLSX tasks loader" e
+          fail e
 
 -- |  Store a complete dataset at the configured file system
 --    locations.

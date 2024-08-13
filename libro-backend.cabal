@@ -38,6 +38,7 @@ library
                     , DeriveGeneric
   exposed-modules:    LiBro.Base
                     , LiBro.Config
+                    , LiBro.Log
                     , LiBro.Data
                     , LiBro.Data.Storage
                     , LiBro.Data.SafeText
@@ -58,6 +59,7 @@ library
                     , QuickCheck
                     , temporary
                     , text
+                    , time
                     , unordered-containers
                     , vector
   hs-source-dirs:     lib

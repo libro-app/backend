@@ -2,16 +2,26 @@
 module LiBro.Base where
 
 import LiBro.Config
+import LiBro.Log
 import LiBro.Util as Util
 import Data.Csv
+import Data.Time.Clock
 import System.Directory as Dir
 import Control.Monad.Reader
+import Control.Monad.Writer
 import Control.Concurrent as Conc
 
 -- |  Type class for 'Config'ured libro effects.
 class (Monad m, MonadFail m) => MonadLiBro m where
 
   readConfig :: (Config -> a) -> m a
+
+  logInfo, logWarning, logError, logFatal :: LogSource -> LogMessage -> m ()
+  logInfo     = addLog INFO
+  logWarning  = addLog WARNING
+  logError    = addLog ERROR
+  logFatal    = addLog FATAL
+  addLog    :: LogLevel -> LogSource -> LogMessage -> m ()
 
   doesFileExist :: FilePath -> m Bool
 
@@ -25,14 +35,16 @@ class (Monad m, MonadFail m) => MonadLiBro m where
 
 -- |  The default configured 'LiBro' effect using 'IO'.
 newtype LiBroIO a = LiBro
-  { unLiBro :: ReaderT Config IO a
-  } deriving  ( Functor, Applicative, Monad
-              , MonadFail, MonadIO
+  { unLiBro :: ReaderT Config (WriterT [Log] IO) a
+  } deriving  ( Functor, Applicative, Monad, MonadFail
               , MonadReader Config
+              , MonadWriter [Log]
+              , MonadIO
               )
 
 instance MonadLiBro LiBroIO where
   readConfig        = asks
+  addLog l s m      = do {now <- liftIO getCurrentTime; tell [Log now l s m]}
   doesFileExist fp  = liftIO $ Dir.doesFileExist fp
   loadFromXlsx fp   = liftIO $ Util.loadFromXlsx fp
   storeAsXlsx fp d  = liftIO $ Util.storeAsXlsx fp d
@@ -43,4 +55,11 @@ instance MonadLiBro LiBroIO where
 
 -- |  Run a 'Config'ured libro effect in 'IO'.
 runLiBroIO :: Config -> LiBroIO a -> IO a
-runLiBroIO config = flip runReaderT config . unLiBro
+runLiBroIO config action = do
+  (result, logs) <- runLiBroIOLogs config action
+  mapM_ print logs
+  return result
+
+-- |  Run a 'Config'ured libro effect in 'IO' with logs attached.
+runLiBroIOLogs :: Config -> LiBroIO a -> IO (a, [Log])
+runLiBroIOLogs config = runWriterT . flip runReaderT config . unLiBro
