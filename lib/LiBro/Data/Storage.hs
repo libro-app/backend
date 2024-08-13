@@ -110,10 +110,12 @@ loadPersons = do
   sconf <- readConfig storage
   let fp = directory sconf </> personFile sconf
   exists <- doesFileExist fp
-  if not exists then return M.empty
+  if not exists then fail $ fp ++ " does not exist"
     else do
-      Right prs <- loadFromXlsx fp
-      return $ personMap prs
+      mprs <- loadFromXlsx fp
+      case mprs of
+        Right prs -> return $ personMap prs
+        Left e    -> fail e
 
 -- |  Store 'Tasks' at the configured storage space.
 storeTasks :: MonadLiBro m => Tasks -> m ()
@@ -130,10 +132,12 @@ loadTasks pmap = do
   sconf <- readConfig storage
   let fp = directory sconf </> tasksFile sconf
   exists <- doesFileExist fp
-  if not exists then return []
+  if not exists then fail $ fp ++ " does not exist"
     else do
-      Right records <- loadFromXlsx fp
-      return $ taskRecordsToTasks pmap records
+      mrecords <- loadFromXlsx fp
+      case mrecords of
+        Right records -> return $ taskRecordsToTasks pmap records
+        Left e        -> fail e
 
 -- |  Store a complete dataset at the configured file system
 --    locations.
