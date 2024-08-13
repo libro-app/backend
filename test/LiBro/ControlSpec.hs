@@ -9,7 +9,7 @@ import LiBro.Data.Storage
 import LiBro.Control
 import Data.Default
 import Data.Tree
-import Control.Concurrent
+import qualified Control.Concurrent as Conc
 import System.IO.Temp
 
 spec :: Spec
@@ -22,16 +22,16 @@ dataInitialization = describe "Blocking data loading" $ do
 
   context "With simple data files" $ do
     let config = def { storage = def { directory = "test/storage-files/data" }}
-    expectedData  <- runIO $ runLiBro config loadData
-    blocking      <- runIO $ newEmptyMVar
-    libroData     <- runIO $ newEmptyMVar
+    expectedData  <- runIO $ runLiBroIO config loadData
+    blocking      <- runIO $ Conc.newEmptyMVar
+    libroData     <- runIO $ Conc.newEmptyMVar
     (beb, bed, aeb, aned, ld) <- runIO $ do
-      beforeEmptyBlocking <- isEmptyMVar blocking
-      beforeEmptyData     <- isEmptyMVar libroData
-      runLiBro config $ initData blocking libroData
-      afterEmptyBlocking  <- isEmptyMVar blocking
-      afterNonEmptyData   <- isEmptyMVar libroData
-      loadedData          <- readMVar libroData
+      beforeEmptyBlocking <- Conc.isEmptyMVar blocking
+      beforeEmptyData     <- Conc.isEmptyMVar libroData
+      runLiBroIO config $ initData blocking libroData
+      afterEmptyBlocking  <- Conc.isEmptyMVar blocking
+      afterNonEmptyData   <- Conc.isEmptyMVar libroData
+      loadedData          <- Conc.readMVar libroData
       return
         ( beforeEmptyBlocking
         , beforeEmptyData
@@ -55,24 +55,24 @@ dataStorage = describe "Storing complete LiBro data" $ do
       ldata     = LBS (personMap [ldPerson]) [Node ldTask []]
 
   context "Manual saving while blocked" $ do
-    blocking  <- runIO $ newMVar Reading
-    libroData <- runIO $ newMVar ldata
+    blocking  <- runIO $ Conc.newMVar Reading
+    libroData <- runIO $ Conc.newMVar ldata
     rv <- runIO $ withSystemTempDirectory "storage" $ \tdir -> do
       let config = def { storage = def { directory = tdir }}
-      runLiBro config $ saveData blocking libroData
+      runLiBroIO config $ saveData blocking libroData
     it "Saving returns False" $ rv `shouldBe` False
 
   context "Manual saving of simple data" $ do
-    blocking  <- runIO $ newEmptyMVar
-    libroData <- runIO $ newMVar ldata
+    blocking  <- runIO $ Conc.newEmptyMVar
+    libroData <- runIO $ Conc.newMVar ldata
     testData  <- runIO $ withSystemTempDirectory "storage" $ \tdir -> do
       let config = def { storage = def { directory = tdir }}
-      beforeEmptyBlocking <- isEmptyMVar blocking
-      beforeLibroData     <- readMVar libroData
-      returnValue         <- runLiBro config $ saveData blocking libroData
-      afterEmptyBlocking  <- isEmptyMVar blocking
-      afterLibroData      <- readMVar libroData
-      storedData          <- runLiBro config loadData
+      beforeEmptyBlocking <- Conc.isEmptyMVar blocking
+      beforeLibroData     <- Conc.readMVar libroData
+      returnValue         <- runLiBroIO config $ saveData blocking libroData
+      afterEmptyBlocking  <- Conc.isEmptyMVar blocking
+      afterLibroData      <- Conc.readMVar libroData
+      storedData          <- runLiBroIO config loadData
       return
         ( beforeEmptyBlocking
         , beforeLibroData
