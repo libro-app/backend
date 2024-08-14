@@ -79,6 +79,7 @@ test-suite libro-backend-test
   other-modules:      LiBro.TestUtil
                     , LiBro.TestUtilSpec
                     , LiBro.ConfigSpec
+                    , LiBro.LogSpec
                     , LiBro.DataSpec
                     , LiBro.Data.StorageSpec
                     , LiBro.Data.SafeTextSpec
@@ -102,5 +103,6 @@ test-suite libro-backend-test
                     , silently
                     , temporary
                     , text
+                    , time
                     , transformers
                     , vector

@@ -3,7 +3,8 @@ module LiBro.Log where
 import Text.Printf
 import Data.Time.Clock
 
-data LogLevel   = INFO | WARNING | ERROR | FATAL deriving (Eq, Ord, Show)
+data LogLevel   = INFO | WARNING | ERROR | FATAL
+                  deriving (Eq, Ord, Enum, Bounded, Show)
 type LogSource  = String
 type LogMessage = String
 data Log = Log

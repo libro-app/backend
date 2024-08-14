@@ -3,6 +3,7 @@ module Main where
 import Test.Hspec
 import LiBro.Util
 
+import qualified LiBro.LogSpec            as Log
 import qualified LiBro.DataSpec           as Data
 import qualified LiBro.Data.SafeTextSpec  as Data.SafeText
 import qualified LiBro.Data.StorageSpec   as Data.Storage
@@ -24,6 +25,7 @@ withLibreOffice runTests = do
 
 main :: IO ()
 main = hspec $ aroundAll_ withLibreOffice $ do
+  Log.spec
   Data.spec
   Data.SafeText.spec
   Data.Storage.spec
