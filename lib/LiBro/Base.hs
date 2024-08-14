@@ -21,7 +21,10 @@ class (Monad m, MonadFail m) => MonadLiBro m where
   logWarning  = addLog WARNING
   logError    = addLog ERROR
   logFatal    = addLog FATAL
-  addLog    :: LogLevel -> LogSource -> LogMessage -> m ()
+  addLog :: LogLevel -> LogSource -> LogMessage -> m ()
+  failError, failFatal :: LogSource -> LogMessage -> m a
+  failError s m = logError s m >> fail m
+  failFatal s m = logFatal s m >> fail m
 
   doesFileExist :: FilePath -> m Bool
 
