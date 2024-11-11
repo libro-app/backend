@@ -39,8 +39,8 @@ parseConfig = flip parseIniFile $ do
 
 -- |  Reads a 'Config' value from @config.ini@.
 --    Prints parsing error messages to @STDERR@ when failing.
-readConfig :: IO (Maybe Config)
-readConfig = readConfigFrom "config.ini"
+readDefaultConfig :: IO (Maybe Config)
+readDefaultConfig = readConfigFrom "config.ini"
 
 -- |  Reads a 'Config' value from the given file path.
 --    Prints parsing error messages to @STDERR@ when failing.

@@ -33,10 +33,12 @@ common consumer
 library
   import:             basic
   default-extensions: OverloadedStrings
+                    , FlexibleContexts
                     , GeneralizedNewtypeDeriving
                     , DeriveGeneric
   exposed-modules:    LiBro.Base
                     , LiBro.Config
+                    , LiBro.Log
                     , LiBro.Data
                     , LiBro.Data.Storage
                     , LiBro.Data.SafeText
@@ -57,6 +59,7 @@ library
                     , QuickCheck
                     , temporary
                     , text
+                    , time
                     , unordered-containers
                     , vector
   hs-source-dirs:     lib
@@ -76,6 +79,7 @@ test-suite libro-backend-test
   other-modules:      LiBro.TestUtil
                     , LiBro.TestUtilSpec
                     , LiBro.ConfigSpec
+                    , LiBro.LogSpec
                     , LiBro.DataSpec
                     , LiBro.Data.StorageSpec
                     , LiBro.Data.SafeTextSpec
@@ -99,5 +103,6 @@ test-suite libro-backend-test
                     , silently
                     , temporary
                     , text
+                    , time
                     , transformers
                     , vector
