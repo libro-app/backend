@@ -133,11 +133,8 @@ personStorage :: Spec
 personStorage = describe "XLSX storage of Person data" $ do
 
   describe "Loading without a file" $ do
-    result <- runIO $ withSystemTempDirectory "person-storage" $ \tdir -> do
-      let config = def { storage = def { directory = tdir }}
-      runLiBroIO config loadPersons
-    it "Empty Person map" $
-      result `shouldBe` M.empty
+    it "Correct error thrown" $
+      emptyPersonLoading `shouldThrow` anyException
 
   modifyMaxSuccess (const 20) $
     prop "Load . store = id" $
@@ -147,15 +144,17 @@ personStorage = describe "XLSX storage of Person data" $ do
           loadedPersons <- runLiBroIO config $ storePersons pmap >> loadPersons
           return $ loadedPersons === pmap
 
+  where emptyPersonLoading = do
+          withSystemTempDirectory "person-storage" $ \tdir -> do
+            let config = def { storage = def { directory = tdir }}
+            runLiBroIO config loadPersons
+
 taskStorage :: Spec
 taskStorage = describe "XLSX storage of Task data" $ do
 
   describe "Loading without a file" $ do
-    result <- runIO $ withSystemTempDirectory "task-storage" $ \tdir -> do
-      let config = def { storage = def { directory = tdir }}
-      runLiBroIO config $ loadTasks M.empty
-    it "Empty task list" $
-      result `shouldBe` []
+    it "Correct error thrown" $
+      emptyTaskLoading `shouldThrow` anyException
 
   let pmap  = personMap
         [ Person 17 "Nina Schreubenmyrthe" "foo@bar"
@@ -182,6 +181,11 @@ taskStorage = describe "XLSX storage of Task data" $ do
       runLiBroIO config $ storeTasks ts >> loadTasks pmap
     it "Got the right task forest" $
       loadedTasks `shouldBe` ts
+
+  where emptyTaskLoading = do
+          withSystemTempDirectory "task-storage" $ \tdir -> do
+            let config = def { storage = def { directory = tdir }}
+            runLiBroIO config $ loadTasks M.empty
 
 dataStorage :: Spec
 dataStorage = describe "Complete dataset" $ do
